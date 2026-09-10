@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Review sub-account{% endblock %}
+{% block content %}
+
+<table class="pnl" cellpadding="0" cellspacing="0" border="0" width="640">
+  <tr>
+    <td class="c4" style="background:{{ tenant.accent_color }};color:#fff;padding:6px 10px;">
+      <h1 id="ctl00_ContentMain_lblReviewTitle" class="hd1"
+          style="margin:0;font-size:14px;font-weight:bold;">Review sub-account</h1>
+    </td>
+  </tr>
+  <tr>
+    <td class="c2" style="border:1px solid #9a9a90;padding:12px;">
+
+      {# Nothing has been written yet. The commit happens on the next screen. #}
+      <div id="ctl00_ContentMain_pnlReviewNotice" class="alrt" role="alert" style="margin-bottom:10px;">
+        Nothing has been submitted yet. Review the details, then confirm to open the sub-account.
+      </div>
+
+      <table class="c1" cellpadding="5" cellspacing="0" border="1" width="100%">
+        <tr>
+          <td class="c3 lbl">{{ tenant.member_id_label }}</td>
+          <td class="c3 val"><span id="ctl00_ContentMain_lblReviewMemberId">{{ member.id }}</span></td>
+        </tr>
+        <tr>
+          <td class="c3 lbl">Sub-account type</td>
+          <td class="c3 val"><span id="ctl00_ContentMain_lblReviewType">{{ account_kinds[values['kind']] }}</span></td>
+        </tr>
+        <tr>
+          <td class="c3 lbl">Nickname</td>
+          <td class="c3 val"><span id="ctl00_ContentMain_lblReviewNickname">{{ values['nickname'] }}</span></td>
+        </tr>
+        <tr>
+          <td class="c3 lbl">Opening deposit</td>
+          <td class="c3 val"><span id="ctl00_ContentMain_lblReviewDeposit">{{ money(values['opening_deposit']|float) }}</span></td>
+        </tr>
+        <tr>
+          <td class="c3 lbl">Funding source</td>
+          <td class="c3 val"><span id="ctl00_ContentMain_lblReviewFunding">{{ funding_sources[values['funding_source']] }}</span></td>
+        </tr>
+      </table>
+
+      <table cellpadding="6" cellspacing="0" border="0" style="margin-top:12px;">
+        <tr>
+          <td class="c3">
+            <form method="post"
+                  action="{{ url_for('members.subaccount_confirm', member_id=member.id) }}">
+              <input type="hidden" id="ctl00_ContentMain_hidReviewToken"
+                     name="ctl00$ContentMain$hidReviewToken" value="{{ review_token }}">
+              <input type="submit" id="ctl00_ContentMain_btnConfirm" name="ctl00$ContentMain$btnConfirm"
+                     class="btn" value="Confirm and open">
+            </form>
+          </td>
+          <td class="c3">
+            <form method="get" action="{{ url_for('members.subaccount_new', member_id=member.id) }}">
+              <input type="submit" id="ctl00_ContentMain_btnBack" class="btn" value="Back">
+            </form>
+          </td>
+        </tr>
+      </table>
+
+    </td>
+  </tr>
+</table>
+
+{% endblock %}

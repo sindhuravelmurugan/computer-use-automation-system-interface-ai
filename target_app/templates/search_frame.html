@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Member search form</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='legacy.css') }}">
+</head>
+<body class="f1" style="margin:0;padding:12px;background:#fbfbf7;">
+
+{# target=_top so the result replaces the whole page, not just this frame. #}
+<form method="post" action="{{ url_for('members.do_search') }}" target="_top">
+  <table cellpadding="4" cellspacing="0" border="0">
+    <tr>
+      <td class="c3">
+        <label for="ctl00_ContentMain_txtMemberId">{{ tenant.member_id_label }}</label>
+      </td>
+      <td class="c3">
+        <input type="text" id="ctl00_ContentMain_txtMemberId"
+               name="ctl00$ContentMain$txtMemberId" class="f2" size="20"
+               maxlength="12" autocomplete="off">
+      </td>
+      <td class="c3">
+        <input type="submit" id="ctl00_btnSearch" name="ctl00$btnSearch"
+               class="btn" value="{{ tenant.search_button_label }}">
+      </td>
+    </tr>
+  </table>
+</form>
+
+</body>
+</html>

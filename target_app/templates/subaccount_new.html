@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Open sub-account{% endblock %}
+{% block content %}
+
+<table class="pnl" cellpadding="0" cellspacing="0" border="0" width="640">
+  <tr>
+    <td class="c4" style="background:{{ tenant.accent_color }};color:#fff;padding:6px 10px;">
+      <h1 id="ctl00_ContentMain_lblNewSubTitle" class="hd1"
+          style="margin:0;font-size:14px;font-weight:bold;">Open sub-account</h1>
+    </td>
+  </tr>
+  <tr>
+    <td class="c2" style="border:1px solid #9a9a90;padding:12px;">
+
+      <p class="c9" style="margin:0 0 10px 0;">
+        {{ tenant.member_id_label }} {{ member.id }} &mdash; {{ member.name }}
+      </p>
+
+      {% if errors %}
+      <div id="ctl00_ContentMain_pnlFormErrors" class="alrt" role="alert" style="margin-bottom:10px;">
+        <ul style="margin:0 0 0 18px;padding:0;">
+          {% for err in errors %}<li>{{ err }}</li>{% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      <form method="post"
+            action="{{ url_for('members.subaccount_review', member_id=member.id) }}">
+        <table cellpadding="5" cellspacing="0" border="0">
+          <tr>
+            <td class="c3">
+              <label for="ctl00_ContentMain_ddlAccountType">Sub-account type</label>
+            </td>
+            <td class="c3">
+              <select id="ctl00_ContentMain_ddlAccountType" name="ctl00$ContentMain$ddlAccountType" class="f2">
+                <option value="">-- select --</option>
+                {% for key, label in account_kinds.items() %}
+                <option value="{{ key }}" {% if values.get('kind') == key %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td class="c3">
+              <label for="ctl00_ContentMain_txtNickname">Nickname</label>
+            </td>
+            <td class="c3">
+              <input type="text" id="ctl00_ContentMain_txtNickname" name="ctl00$ContentMain$txtNickname"
+                     class="f2" size="30" maxlength="40" autocomplete="off"
+                     value="{{ values.get('nickname', '') }}">
+            </td>
+          </tr>
+          <tr>
+            <td class="c3">
+              <label for="ctl00_ContentMain_txtOpeningDeposit">Opening deposit</label>
+            </td>
+            <td class="c3">
+              <input type="text" id="ctl00_ContentMain_txtOpeningDeposit"
+                     name="ctl00$ContentMain$txtOpeningDeposit" class="f2" size="12" autocomplete="off"
+                     value="{{ values.get('opening_deposit_raw', '') }}">
+            </td>
+          </tr>
+          <tr>
+            <td class="c3">
+              <label for="ctl00_ContentMain_ddlFundingSource">Funding source</label>
+            </td>
+            <td class="c3">
+              <select id="ctl00_ContentMain_ddlFundingSource" name="ctl00$ContentMain$ddlFundingSource" class="f2">
+                <option value="">-- select --</option>
+                {% for key, label in funding_sources.items() %}
+                <option value="{{ key }}" {% if values.get('funding_source') == key %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td class="c3"></td>
+            <td class="c3">
+              <input type="submit" id="ctl00_ContentMain_btnContinue" name="ctl00$ContentMain$btnContinue"
+                     class="btn" value="Continue to review">
+            </td>
+          </tr>
+        </table>
+      </form>
+
+      <p class="c9" style="margin:12px 0 0 0;">
+        <a id="ctl00_ContentMain_lnkCancel"
+           href="{{ url_for('members.detail', member_id=member.id) }}">Cancel</a>
+      </p>
+
+    </td>
+  </tr>
+</table>
+
+{% endblock %}

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{% block title %}{{ tenant.brand_name }}{% endblock %} - {{ tenant.brand_name }}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='legacy.css') }}">
+</head>
+<body class="f1" style="margin:0;">
+
+{% if modal %}
+{% include "_modal.html" %}
+{% endif %}
+
+<table class="pnl" width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td class="c2" style="background:{{ tenant.accent_color }};padding:10px 14px;">
+      <table cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td class="c3"><span id="ctl00_lblBrand" class="c4">{{ tenant.brand_name }}</span></td>
+          <td class="c3" align="right">
+            <span id="ctl00_lblEnv" class="c5">Member Servicing Console&nbsp;&nbsp;v4.2.1</span>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td class="c6" style="background:#e6e6e0;padding:4px 14px;border-bottom:1px solid #9a9a90;">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="c3" style="padding-right:14px;">
+            <a id="ctl00_lnkSearch" href="{{ url_for('members.search') }}">Member Search</a>
+          </td>
+          <td class="c3">
+            <a id="ctl00_lnkSignOut" href="{{ url_for('auth.logout') }}">Sign Out</a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td class="c7" style="padding:14px;">
+      <table class="pnl" cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td class="c8" valign="top">
+            <table class="c2" cellpadding="6" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td>
+                  {% block content %}{% endblock %}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td class="c9" style="padding:10px 14px;color:#555;border-top:1px solid #c9c9c0;">
+      <span id="ctl00_lblFooter">Internal use only. Training and demonstration data.</span>
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>

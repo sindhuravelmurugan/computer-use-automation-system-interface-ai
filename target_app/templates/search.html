@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Member Search{% endblock %}
+{% block content %}
+
+<table class="pnl" cellpadding="0" cellspacing="0" border="0" width="640">
+  <tr>
+    <td class="c4" style="background:{{ tenant.accent_color }};color:#fff;padding:6px 10px;">
+      <span id="ctl00_ContentMain_lblSearchTitle">Member Search</span>
+    </td>
+  </tr>
+  <tr>
+    <td class="c2" style="border:1px solid #9a9a90;padding:0;">
+      {# The form lives in a frame. Legacy consoles do this constantly. #}
+      <iframe id="ctl00_ContentMain_frmSearch" name="frmSearch" title="Member search form"
+              src="{{ url_for('members.search_frame') }}"
+              width="100%" height="150" frameborder="0" style="display:block;border:0;"></iframe>
+    </td>
+  </tr>
+  <tr>
+    <td class="c9" style="padding:8px 10px;color:#555;">
+      <span id="ctl00_ContentMain_lblSearchHint">
+        Enter a {{ tenant.member_id_label|lower }} to open the member record.
+      </span>
+    </td>
+  </tr>
+</table>
+
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Member Search{% endblock %}
+{% block content %}
+
+<table class="pnl" cellpadding="0" cellspacing="0" border="0" width="640">
+  <tr>
+    <td class="c4" style="background:{{ tenant.accent_color }};color:#fff;padding:6px 10px;">
+      <span id="ctl00_ContentMain_lblSearchTitle">Member Search</span>
+    </td>
+  </tr>
+  <tr>
+    <td class="c2" style="border:1px solid #9a9a90;padding:12px;">
+
+      {# A business result, not an HTTP error. This page is a 200. #}
+      <div id="ctl00_ContentMain_pnlSearchMessage" class="alrt" role="alert">
+        {% if message_key == "blank" %}
+          Enter a {{ tenant.member_id_label|lower }} to search.
+        {% else %}
+          {{ tenant.not_found_text }} for that ID.
+        {% endif %}
+      </div>
+
+      <p class="c9" style="margin:12px 0 0 0;">
+        <a id="ctl00_ContentMain_lnkBackToSearch" href="{{ url_for('members.search') }}">Return to search</a>
+      </p>
+
+    </td>
+  </tr>
+</table>
+
+{% endblock %}

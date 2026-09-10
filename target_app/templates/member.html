@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}{{ tenant.summary_heading }}{% endblock %}
+{% block content %}
+
+<table class="pnl" cellpadding="0" cellspacing="0" border="0" width="720">
+  <tr>
+    <td class="c4" style="background:{{ tenant.accent_color }};color:#fff;padding:6px 10px;">
+      <h1 id="ctl00_ContentMain_lblSummaryTitle" class="hd1"
+          style="margin:0;font-size:14px;font-weight:bold;">{{ tenant.summary_heading }}</h1>
+    </td>
+  </tr>
+  <tr>
+    <td class="c2" style="border:1px solid #9a9a90;padding:12px;">
+
+      {% if member.status == "closed" %}
+      <div id="ctl00_ContentMain_pnlAccountStatus" class="alrt" role="alert" style="margin-bottom:12px;">
+        This account is closed. No servicing actions are available.
+      </div>
+      {% endif %}
+
+      {# Layout table wrapping a data table. Values sit in plain cells next to
+         their label cell, with no programmatic association. #}
+      <table class="c2" cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td class="c8" valign="top" width="60%">
+
+            <table class="c1" cellpadding="5" cellspacing="0" border="1" width="100%">
+              <tr>
+                <td class="c3 lbl">{{ tenant.member_id_label }}</td>
+                <td class="c3 val"><span id="ctl00_ContentMain_lblMemberId">{{ member.id }}</span></td>
+              </tr>
+              <tr>
+                <td class="c3 lbl">Name</td>
+                <td class="c3 val"><span id="ctl00_ContentMain_lblMemberName">{{ member.name }}</span></td>
+              </tr>
+              <tr>
+                <td class="c3 lbl">Status</td>
+                <td class="c3 val"><span id="ctl00_ContentMain_lblStatus">{{ member.status }}</span></td>
+              </tr>
+              <tr>
+                <td class="c3 lbl">{{ tenant.savings_row_label }}</td>
+                <td class="c3 val"><span id="ctl00_ContentMain_lblSavings">{{ money(member.savings) }}</span></td>
+              </tr>
+            </table>
+
+          </td>
+          <td class="c8" valign="top" style="padding-left:14px;">
+            <table class="c1" cellpadding="5" cellspacing="0" border="1" width="100%">
+              <tr>
+                <td class="c3 lbl">Branch</td>
+                <td class="c3 val">Central</td>
+              </tr>
+              <tr>
+                <td class="c3 lbl">Opened</td>
+                <td class="c3 val">2019-04-11</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+
+      <h2 class="hd2" style="font-size:12px;margin:16px 0 6px 0;">Sub-accounts</h2>
+      {% if member.sub_accounts %}
+      <table class="c1" cellpadding="5" cellspacing="0" border="1" width="100%">
+        <tr class="c6">
+          <td class="c3 lbl">Reference</td>
+          <td class="c3 lbl">Type</td>
+          <td class="c3 lbl">Nickname</td>
+          <td class="c3 lbl">Opening deposit</td>
+        </tr>
+        {% for sub in member.sub_accounts %}
+        <tr>
+          <td class="c3 val">
+            <a href="{{ url_for('members.subaccount_detail', member_id=member.id, sub_id=sub.id) }}">{{ sub.id }}</a>
+          </td>
+          <td class="c3 val">{{ account_kinds[sub.kind] }}</td>
+          <td class="c3 val">{{ sub.nickname }}</td>
+          <td class="c3 val">{{ money(sub.opening_deposit) }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}
+      <p class="c9" style="margin:0;">No sub-accounts on this record.</p>
+      {% endif %}
+
+      {% if member.status == "active" %}
+      <p style="margin:16px 0 0 0;">
+        <a id="ctl00_ContentMain_lnkOpenSubAccount"
+           href="{{ url_for('members.subaccount_new', member_id=member.id) }}">Open sub-account</a>
+      </p>
+      {% endif %}
+
+      <p class="c9" style="margin:12px 0 0 0;">
+        <a id="ctl00_ContentMain_lnkBackToSearch" href="{{ url_for('members.search') }}">Return to search</a>
+      </p>
+
+    </td>
+  </tr>
+</table>
+
+{% endblock %}

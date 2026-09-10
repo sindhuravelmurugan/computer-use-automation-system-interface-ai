@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Sub-account opened{% endblock %}
+{% block content %}
+
+<table class="pnl" cellpadding="0" cellspacing="0" border="0" width="640">
+  <tr>
+    <td class="c4" style="background:{{ tenant.accent_color }};color:#fff;padding:6px 10px;">
+      <h1 id="ctl00_ContentMain_lblConfirmedTitle" class="hd1"
+          style="margin:0;font-size:14px;font-weight:bold;">Sub-account opened</h1>
+    </td>
+  </tr>
+  <tr>
+    <td class="c2" style="border:1px solid #9a9a90;padding:12px;">
+
+      <div id="ctl00_ContentMain_pnlConfirmed" class="alrt" role="alert" style="margin-bottom:10px;">
+        Sub-account {{ sub.id }} has been opened.
+      </div>
+
+      <table class="c1" cellpadding="5" cellspacing="0" border="1" width="100%">
+        <tr>
+          <td class="c3 lbl">Reference</td>
+          <td class="c3 val"><span id="ctl00_ContentMain_lblSubAccountId">{{ sub.id }}</span></td>
+        </tr>
+        <tr>
+          <td class="c3 lbl">{{ tenant.member_id_label }}</td>
+          <td class="c3 val"><span id="ctl00_ContentMain_lblSubMemberId">{{ member.id }}</span></td>
+        </tr>
+        <tr>
+          <td class="c3 lbl">Sub-account type</td>
+          <td class="c3 val"><span id="ctl00_ContentMain_lblSubType">{{ account_kinds[sub.kind] }}</span></td>
+        </tr>
+        <tr>
+          <td class="c3 lbl">Nickname</td>
+          <td class="c3 val"><span id="ctl00_ContentMain_lblSubNickname">{{ sub.nickname }}</span></td>
+        </tr>
+        <tr>
+          <td class="c3 lbl">Opening deposit</td>
+          <td class="c3 val"><span id="ctl00_ContentMain_lblSubDeposit">{{ money(sub.opening_deposit) }}</span></td>
+        </tr>
+        <tr>
+          <td class="c3 lbl">Funding source</td>
+          <td class="c3 val"><span id="ctl00_ContentMain_lblSubFunding">{{ funding_sources[sub.funding_source] }}</span></td>
+        </tr>
+      </table>
+
+      <p class="c9" style="margin:12px 0 0 0;">
+        <a id="ctl00_ContentMain_lnkBackToMember"
+           href="{{ url_for('members.detail', member_id=member.id) }}">Return to {{ tenant.summary_heading|lower }}</a>
+      </p>
+
+    </td>
+  </tr>
+</table>
+
+{% endblock %}

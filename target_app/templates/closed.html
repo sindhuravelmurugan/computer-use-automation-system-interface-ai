@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Account closed{% endblock %}
+{% block content %}
+
+<table class="pnl" cellpadding="0" cellspacing="0" border="0" width="640">
+  <tr>
+    <td class="c4" style="background:{{ tenant.accent_color }};color:#fff;padding:6px 10px;">
+      <h1 id="ctl00_ContentMain_lblClosedTitle" class="hd1"
+          style="margin:0;font-size:14px;font-weight:bold;">{{ tenant.summary_heading }}</h1>
+    </td>
+  </tr>
+  <tr>
+    <td class="c2" style="border:1px solid #9a9a90;padding:12px;">
+      {# Business outcome: a closed account refuses servicing, and that is a
+         result the caller should receive, not a failure. HTTP 200. #}
+      <div id="ctl00_ContentMain_pnlAccountStatus" class="alrt" role="alert">
+        This account is closed. No servicing actions are available.
+      </div>
+      <p class="c9" style="margin:12px 0 0 0;">
+        <a id="ctl00_ContentMain_lnkBackToMember"
+           href="{{ url_for('members.detail', member_id=member.id) }}">Return to {{ tenant.summary_heading|lower }}</a>
+      </p>
+    </td>
+  </tr>
+</table>
+
+{% endblock %}

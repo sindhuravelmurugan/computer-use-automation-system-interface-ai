@@ -1,0 +1,27 @@
+{# Intermittent interstitial. Overlays the page and must be dismissed. #}
+<div id="ctl00_pnlDisclosureShade" class="shd"
+     style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(20,20,20,0.55);z-index:900;"></div>
+<div id="ctl00_pnlDisclosure" class="pnl dlg" role="dialog" aria-modal="true" aria-label="Disclosure"
+     style="position:fixed;top:90px;left:50%;margin-left:-230px;width:460px;background:#fffdf5;
+            border:2px solid #7a7a70;z-index:901;padding:0;">
+  <table cellpadding="8" cellspacing="0" border="0" width="100%">
+    <tr>
+      <td class="c4" style="background:{{ tenant.accent_color }};color:#fff;">
+        <span id="ctl00_lblDisclosureTitle">Disclosure</span>
+      </td>
+    </tr>
+    <tr>
+      <td class="c3">
+        <p style="margin:0 0 10px 0;">
+          Member account information displayed in this console is confidential.
+          Access is logged. Acknowledge to continue.
+        </p>
+        <form method="post" action="{{ url_for('members.acknowledge') }}">
+          <input type="hidden" name="next" value="{{ current_path }}">
+          <input type="submit" id="ctl00_btnAcknowledge" name="ctl00$btnAcknowledge"
+                 class="btn" value="Acknowledge">
+        </form>
+      </td>
+    </tr>
+  </table>
+</div>

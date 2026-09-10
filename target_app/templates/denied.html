@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Permission denied{% endblock %}
+{% block content %}
+
+<table class="pnl" cellpadding="0" cellspacing="0" border="0" width="640">
+  <tr>
+    <td class="c4" style="background:#7a1f1f;color:#fff;padding:6px 10px;">
+      <h1 id="ctl00_ContentMain_lblDeniedTitle" class="hd1"
+          style="margin:0;font-size:14px;font-weight:bold;">Permission denied</h1>
+    </td>
+  </tr>
+  <tr>
+    <td class="c2" style="border:1px solid #9a9a90;padding:12px;">
+      <div id="ctl00_ContentMain_pnlDenied" class="alrt" role="alert">
+        This record is restricted. Your role cannot view it.
+      </div>
+      <p class="c9" style="margin:12px 0 0 0;">
+        Reference {{ member.id }}. Contact the servicing supervisor to request access.
+      </p>
+      <p class="c9" style="margin:12px 0 0 0;">
+        <a id="ctl00_ContentMain_lnkBackToSearch" href="{{ url_for('members.search') }}">Return to search</a>
+      </p>
+    </td>
+  </tr>
+</table>
+
+{% endblock %}
