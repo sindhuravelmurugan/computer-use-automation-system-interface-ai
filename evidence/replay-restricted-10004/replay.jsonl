@@ -1,0 +1,9 @@
+{"seq": 1, "event": "action", "step_id": "step_001", "kind": "navigate", "duration_ms": 709}
+{"seq": 2, "event": "recovery", "code": "SESSION_EXPIRED", "step_id": "step_001", "attempt": 1}
+{"seq": 3, "event": "action", "step_id": "step_001", "kind": "navigate", "duration_ms": 716}
+{"seq": 4, "event": "resolve", "step_id": "step_002", "strategy_index": 0, "status": "resolved"}
+{"seq": 5, "event": "action", "step_id": "step_002", "kind": "type", "duration_ms": 179}
+{"seq": 6, "event": "checkpoint", "step_id": "step_002", "result": "pass"}
+{"seq": 7, "event": "resolve", "step_id": "step_003", "strategy_index": 0, "status": "resolved"}
+{"seq": 8, "event": "action", "step_id": "step_003", "kind": "click", "duration_ms": 712}
+{"seq": 9, "event": "outcome", "step_id": "step_003", "code": "PERMISSION_DENIED"}

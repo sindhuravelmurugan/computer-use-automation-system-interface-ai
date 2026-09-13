@@ -51,3 +51,8 @@ class Provenance(BaseModel):
     run_id: str
     trace_ref: str
     human_edited: bool = False
+    # The app_version seen during the recording run (docs/surface-spec.md's
+    # PageSignature.app_version), e.g. "v4.2.1". Replay compares this against
+    # what it observes live; a mismatch is a warning, not a hard stop
+    # (docs/replay-spec.md §3). Optional because it wasn't captured pre-replay.
+    recorded_against: str | None = None

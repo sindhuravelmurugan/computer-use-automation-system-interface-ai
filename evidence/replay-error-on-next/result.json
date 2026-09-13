@@ -1,0 +1,25 @@
+{
+  "status": "failure",
+  "capability_id": "member.lookup_savings_balance",
+  "capability_version": "0.1.0",
+  "run_id": "replay-error-on-next",
+  "outputs": null,
+  "outcome": null,
+  "error": {
+    "code": "TARGET_NOT_FOUND",
+    "step_id": "step_004",
+    "expected": "target resolves: Account summary heading",
+    "observed": "not_found",
+    "strategy_used": null,
+    "evidence": "evidence/replay-error-on-next/failure_step_004.png"
+  },
+  "recoveries_applied": [
+    {
+      "code": "SESSION_EXPIRED",
+      "step_id": "step_001",
+      "attempts": 1
+    }
+  ],
+  "duration_ms": 5067,
+  "steps_completed": 3
+}

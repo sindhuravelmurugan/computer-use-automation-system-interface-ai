@@ -43,7 +43,8 @@ from playwright.sync_api import (
     sync_playwright,
 )
 
-from src.schema.common import A11yStrategy, DomStrategy, LabelStrategy, SpatialStrategy
+from src.schema.common import DomStrategy
+from src.surface.matching import resolve_bundle
 from src.surface.pruning import prune_nodes
 from src.surface.types import (
     Action,
@@ -279,38 +280,6 @@ def _compute_state_hash(nodes: list[UINode]) -> str:
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
-def _vertical_overlap(a: Rect, b: Rect) -> bool:
-    return not (a.y + a.height <= b.y or b.y + b.height <= a.y)
-
-
-def _horizontal_overlap(a: Rect, b: Rect) -> bool:
-    return not (a.x + a.width <= b.x or b.x + b.width <= a.x)
-
-
-def _in_direction(anchor: Rect, other: Rect, direction: str) -> bool:
-    if direction == "right":
-        return other.x >= anchor.x + anchor.width - 1 and _vertical_overlap(anchor, other)
-    if direction == "left":
-        return other.x + other.width <= anchor.x + 1 and _vertical_overlap(anchor, other)
-    if direction == "down":
-        return other.y >= anchor.y + anchor.height - 1 and _horizontal_overlap(anchor, other)
-    if direction == "up":
-        return other.y + other.height <= anchor.y + 1 and _horizontal_overlap(anchor, other)
-    raise ValueError(f"unknown direction {direction!r}")
-
-
-def _direction_distance(anchor: Rect, other: Rect, direction: str) -> float:
-    if direction == "right":
-        return other.x - (anchor.x + anchor.width)
-    if direction == "left":
-        return anchor.x - (other.x + other.width)
-    if direction == "down":
-        return other.y - (anchor.y + anchor.height)
-    if direction == "up":
-        return anchor.y - (other.y + other.height)
-    raise ValueError(f"unknown direction {direction!r}")
-
-
 class WebSurface:
     """Playwright sync implementation of ``Surface`` for a browser-rendered
     web app, including legacy framesets.
@@ -453,63 +422,7 @@ class WebSurface:
 
     def resolve(self, bundle: LocatorBundle) -> Resolution:
         nodes = prune_nodes(self._collect_raw_nodes())
-
-        last_ambiguous: tuple[int, int] | None = None
-        for idx, strategy in enumerate(bundle.strategies):
-            matches = self._match_strategy(strategy, nodes)
-            if len(matches) == 1:
-                return Resolution(
-                    node=matches[0], strategy_index=idx, candidates_found=1, status="resolved"
-                )
-            if len(matches) > 1:
-                last_ambiguous = (idx, len(matches))
-            # Zero matches: fall through to the next strategy silently.
-
-        if last_ambiguous is not None:
-            idx, count = last_ambiguous
-            return Resolution(node=None, strategy_index=idx, candidates_found=count, status="ambiguous")
-        return Resolution(node=None, strategy_index=None, candidates_found=0, status="not_found")
-
-    def _match_strategy(self, strategy: Any, nodes: list[UINode]) -> list[UINode]:
-        if isinstance(strategy, A11yStrategy):
-            return [n for n in nodes if n.role == strategy.role and n.name == strategy.name]
-        if isinstance(strategy, LabelStrategy):
-            return [
-                n for n in nodes if n.role == strategy.control and n.name == strategy.label_text
-            ]
-        if isinstance(strategy, SpatialStrategy):
-            return self._match_spatial(strategy, nodes)
-        if isinstance(strategy, DomStrategy):
-            return self._match_dom(strategy)
-        raise ValueError(f"unknown strategy kind {strategy!r}")
-
-    def _match_spatial(self, strategy: SpatialStrategy, nodes: list[UINode]) -> list[UINode]:
-        anchors = [n for n in nodes if n.name.strip() == strategy.anchor_text.strip()]
-        if len(anchors) != 1:
-            # No unique anchor: this strategy cannot resolve. Treated as a
-            # zero-match rank so resolve() falls through to the next one.
-            return []
-        anchor = anchors[0]
-
-        candidates = [
-            n
-            for n in nodes
-            if n is not anchor
-            and n.frame_path == anchor.frame_path
-            and _in_direction(anchor.bounds, n.bounds, strategy.direction)
-        ]
-        if not candidates:
-            return []
-
-        candidates.sort(key=lambda n: _direction_distance(anchor.bounds, n.bounds, strategy.direction))
-        if len(candidates) >= 2:
-            d0 = _direction_distance(anchor.bounds, candidates[0].bounds, strategy.direction)
-            d1 = _direction_distance(anchor.bounds, candidates[1].bounds, strategy.direction)
-            if abs(d0 - d1) < 1.0:
-                # Two equally-near candidates: genuinely ambiguous, not a
-                # guess between them.
-                return candidates[:2]
-        return [candidates[0]]
+        return resolve_bundle(bundle, nodes, dom_matcher=self._match_dom)
 
     def _match_dom(self, strategy: DomStrategy) -> list[UINode]:
         assert self._page is not None
