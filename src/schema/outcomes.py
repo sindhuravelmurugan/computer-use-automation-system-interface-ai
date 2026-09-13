@@ -8,6 +8,11 @@ from pydantic import BaseModel
 
 from src.schema.common import Detector
 
+# docs/discovery-spec.md §7: auditability field so a reviewer can tell a
+# detector grounded in an observed page ("probed") from one a human
+# asserted ("declared") or signed off on after the fact ("reviewed").
+OutcomeOrigin = Literal["probed", "declared", "reviewed"]
+
 
 class Outcome(BaseModel):
     code: str
@@ -17,3 +22,4 @@ class Outcome(BaseModel):
     check_after: list[str]
     returns: dict[str, Any]
     terminal: bool = True
+    origin: OutcomeOrigin = "declared"

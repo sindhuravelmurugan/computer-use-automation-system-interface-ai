@@ -32,3 +32,25 @@ class AllowAllGate:
 
     def check(self, action: "Action", ctx: "ReplayContext") -> PolicyDecision:
         return PolicyDecision(allowed=True)
+
+
+class AllowlistPolicyGate:
+    """The one slice of the real policy gate discovery needs now, ahead of
+    step 6: `navigate` can target any URL the model picks, unlike replay's
+    fixed `surface.entry_point`, so it needs the same allowlist check
+    replay's pre-flight already does for its one fixed URL -- just applied
+    per-action instead of once (docs/discovery-spec.md §5, §2 "same
+    PolicyGate as replay"). Everything else stays permissive, exactly like
+    AllowAllGate; risk classification and redaction rules are still step 6.
+    """
+
+    def __init__(self, allowlist: list[str]) -> None:
+        self._allowlist = allowlist
+
+    def check(self, action: "Action", ctx: "ReplayContext") -> PolicyDecision:
+        if action.kind == "navigate" and action.url is not None:
+            if not any(action.url.startswith(prefix) for prefix in self._allowlist):
+                return PolicyDecision(
+                    allowed=False, reason=f"url {action.url!r} is not in the allowlist {self._allowlist!r}"
+                )
+        return PolicyDecision(allowed=True)

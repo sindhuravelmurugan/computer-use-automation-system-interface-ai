@@ -7,20 +7,19 @@ from __future__ import annotations
 
 import time
 from typing import Any, Callable
-from urllib.parse import urlsplit
 
 from src.replay.context import ReplayContext
 from src.replay.detectors import describe_detector, describe_observed_state, evaluate_detector, in_scope
 from src.replay.escalation import EscalationReason, raise_intervention
 from src.replay.evidence import EvidenceWriter
 from src.replay.ledger import AttemptLedger
+from src.replay.login import DEFAULT_CREDENTIALS, perform_login
 from src.replay.overrides import load_override_file
 from src.replay.policy import AllowAllGate, PolicyGate
 from src.replay.preflight import OverrideLoader, run_preflight
 from src.replay.templating import substitute, substitute_detector
 from src.replay.transforms import TransformError, apply_transform
 from src.schema.artifact import CapabilityArtifact
-from src.schema.common import A11yStrategy, Target
 from src.schema.recoveries import Recovery, RecoveryAction
 from src.schema.result import ErrorDetail, OutcomeResult, RecoveryApplied, ReplayResult
 from src.surface.protocol import Surface
@@ -39,7 +38,7 @@ class ReplayEngine:
         allowlist: list[str] | None = None,
         policy_gate: PolicyGate | None = None,
         override_loader: OverrideLoader | None = None,
-        credentials: tuple[str, str] = ("automation", "demo"),
+        credentials: tuple[str, str] = DEFAULT_CREDENTIALS,
         evidence_dir: str = "evidence",
     ) -> None:
         self._surface_factory = surface_factory
@@ -388,47 +387,14 @@ class ReplayEngine:
         )
 
     def _reauthenticate(self, surface: Surface, context: ReplayContext) -> None:
-        """The one spot with app-specific login knowledge. The artifact
-        format has no declarative login flow (mock auth is out of scope per
-        CLAUDE.md), and Surface deliberately knows nothing about credentials
-        or sessions -- so "re_authenticate" has to be handled here, not
-        delegated.
+        """"re_authenticate" has to be handled here, not delegated: the
+        artifact format has no declarative login flow, and Surface
+        deliberately knows nothing about credentials or sessions. The
+        actual sequence lives in src.replay.login, shared with discovery's
+        bootstrap and the probe pass.
         """
-        username, password = self._credentials
         current_url = surface.observe().page.url
-        parts = urlsplit(current_url)
-        login_url = f"{parts.scheme}://{parts.netloc}/login"
-
-        self._gated_act(surface, Action(kind="navigate", url=login_url, wait=WaitSpec()), context)
-        self._gated_act(
-            surface,
-            Action(
-                kind="type",
-                target=Target(description="username field", strategies=[A11yStrategy(role="textbox", name="User name")]),
-                value=username,
-                wait=WaitSpec(),
-            ),
-            context,
-        )
-        self._gated_act(
-            surface,
-            Action(
-                kind="type",
-                target=Target(description="password field", strategies=[A11yStrategy(role="textbox", name="Password")]),
-                value=password,
-                wait=WaitSpec(),
-            ),
-            context,
-        )
-        self._gated_act(
-            surface,
-            Action(
-                kind="click",
-                target=Target(description="sign in button", strategies=[A11yStrategy(role="button", name="Sign In")]),
-                wait=WaitSpec(),
-            ),
-            context,
-        )
+        perform_login(lambda action: self._gated_act(surface, action, context), current_url, self._credentials)
 
     def _extract_outputs_for_step(
         self,

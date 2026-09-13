@@ -1,7 +1,14 @@
 """Acceptance checks for the replay engine (docs/replay-spec.md §11), run
-against the hand-written artifact at
-artifacts/member.lookup_savings_balance.v0.json and the live meridian tenant
-on port 5001.
+against the shipped artifact at artifacts/member.lookup_savings_balance.json
+and the live meridian tenant on port 5001.
+
+The hand-written v0 scaffolding artifact this script originally targeted
+was deleted per docs/discovery-spec.md §9 once a real discovery run could
+produce (and a review pass could complete) the genuine article -- see
+scripts/discovery_acceptance.py for the discovery/compile/probe run that
+produced it. This script still earns its keep: it covers replay-engine
+behaviors (recovery/escalation/determinism/redaction) that discovery's own
+acceptance script doesn't re-derive.
 
 Run with: python -m scripts.replay_acceptance
 """
@@ -22,7 +29,7 @@ from src.schema.artifact import CapabilityArtifact
 from src.surface.web import WebSurface
 
 MERIDIAN = "http://127.0.0.1:5001"
-ARTIFACT_PATH = Path("artifacts/member.lookup_savings_balance.v0.json")
+ARTIFACT_PATH = Path("artifacts/member.lookup_savings_balance.json")
 EVIDENCE_DIR = "evidence"
 
 _RESULTS: list[tuple[str, bool]] = []

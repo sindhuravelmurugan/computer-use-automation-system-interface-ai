@@ -1,17 +1,17 @@
 {
   "status": "failure",
   "capability_id": "member.lookup_savings_balance",
-  "capability_version": "0.1.0",
+  "capability_version": "1.0.0",
   "run_id": "replay-error-on-next",
   "outputs": null,
   "outcome": null,
   "error": {
-    "code": "TARGET_NOT_FOUND",
-    "step_id": "step_004",
-    "expected": "target resolves: Account summary heading",
-    "observed": "not_found",
+    "code": "CHECKPOINT_FAILED",
+    "step_id": "step_003",
+    "expected": "element present: Heading \"Account summary\"",
+    "observed": "heading='Application error' url='http://127.0.0.1:5001/members/search'",
     "strategy_used": null,
-    "evidence": "evidence/replay-error-on-next/failure_step_004.png"
+    "evidence": "evidence/replay-error-on-next/failure_step_003.png"
   },
   "recoveries_applied": [
     {
@@ -20,6 +20,6 @@
       "attempts": 1
     }
   ],
-  "duration_ms": 5067,
-  "steps_completed": 3
+  "duration_ms": 5136,
+  "steps_completed": 2
 }

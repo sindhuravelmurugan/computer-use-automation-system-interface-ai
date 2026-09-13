@@ -1,0 +1,9 @@
+{"seq": 1, "event": "bootstrap_login"}
+{"seq": 2, "event": "decision", "step": 0, "kind": "type"}
+{"seq": 3, "event": "action", "step": 0, "kind": "type", "duration_ms": 216, "ok": true}
+{"seq": 4, "event": "decision", "step": 1, "kind": "click"}
+{"seq": 5, "event": "action", "step": 1, "kind": "click", "duration_ms": 747, "ok": true}
+{"seq": 6, "event": "decision", "step": 2, "kind": "read"}
+{"seq": 7, "event": "action", "step": 2, "kind": "read", "duration_ms": 220, "ok": true}
+{"seq": 8, "event": "decision", "step": 3, "kind": "done"}
+{"seq": 9, "event": "stop", "reason": "SUCCESS"}

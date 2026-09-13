@@ -1,0 +1,10 @@
+{"seq": 1, "event": "probe_start", "probed_param": "member_id", "invalid_value": "99999"}
+{"seq": 2, "event": "bootstrap_login"}
+{"seq": 3, "event": "action", "step_id": "step_001", "kind": "navigate", "ok": true}
+{"seq": 4, "event": "resolve", "step_id": "step_002", "status": "resolved"}
+{"seq": 5, "event": "action", "step_id": "step_002", "kind": "type", "ok": true}
+{"seq": 6, "event": "checkpoint", "step_id": "step_002", "result": "pass"}
+{"seq": 7, "event": "resolve", "step_id": "step_003", "status": "resolved"}
+{"seq": 8, "event": "action", "step_id": "step_003", "kind": "click", "ok": true}
+{"seq": 9, "event": "checkpoint", "step_id": "step_003", "result": "fail"}
+{"seq": 10, "event": "probe_outcome", "code": "MEMBER_NOT_FOUND", "step_id": "step_003"}

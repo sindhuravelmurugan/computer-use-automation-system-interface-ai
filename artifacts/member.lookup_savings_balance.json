@@ -1,0 +1,334 @@
+{
+  "schema_version": "1.0",
+  "capability": {
+    "id": "member.lookup_savings_balance",
+    "version": "1.0.0",
+    "name": "Look up member 10001 and read their savings balance",
+    "description": "Discovered from the goal: Look up member 10001 and read their savings balance",
+    "approval_state": "approved",
+    "base_capability_id": null,
+    "tenant_id": null
+  },
+  "surface": {
+    "type": "web",
+    "entry_point": "http://127.0.0.1:5001/members/search",
+    "viewport": null,
+    "requires_session": true
+  },
+  "provenance": {
+    "recorded_at": "2026-09-13T15:27:57.605102Z",
+    "recorded_by": "discovery-agent",
+    "model": "gemini-flash-lite-latest",
+    "goal": "Look up member 10001 and read their savings balance",
+    "run_id": "discover-1789313269",
+    "trace_ref": "evidence/discover-1789313269/trace.jsonl",
+    "human_edited": true,
+    "recorded_against": "v4.2.1"
+  },
+  "inputs": [
+    {
+      "name": "member_id",
+      "type": "string",
+      "required": true,
+      "sensitive": true,
+      "description": "Discovered input (value redacted).",
+      "example": null,
+      "constraints": {
+        "pattern": "^[0-9]{5}$"
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "name": "savings_balance",
+      "type": "money",
+      "required": true,
+      "sensitive": true,
+      "description": "Discovered from a 'read' step (step_004).",
+      "source": {
+        "step_id": "step_004",
+        "target": {
+          "description": "text \"4,832.10\", discovered via #ctl00_ContentMain_lblSavings",
+          "strategies": [
+            {
+              "kind": "a11y",
+              "role": "text",
+              "name": "4,832.10"
+            },
+            {
+              "kind": "spatial",
+              "anchor_text": "Savings",
+              "direction": "right"
+            },
+            {
+              "kind": "dom",
+              "css": "#ctl00_ContentMain_lblSavings",
+              "xpath": null
+            }
+          ]
+        },
+        "transform": "parse_currency"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "step_001",
+      "action": "navigate",
+      "target": null,
+      "value": "http://127.0.0.1:5001/members/search",
+      "risk": "safe",
+      "checkpoint": null,
+      "wait": null,
+      "on_timeout": "fail",
+      "notes": "Synthesized by the compiler, not discovered: this run's session bootstrap (not a model decision) already reached the entry point before the model's first decision, so no navigate step survived pruning. Every artifact needs an explicit, target-free first step so a recovery has a chance to fire before any target-dependent step runs."
+    },
+    {
+      "id": "step_002",
+      "action": "type",
+      "target": {
+        "description": "textbox \"Member ID\", discovered via #ctl00_ContentMain_txtMemberId",
+        "strategies": [
+          {
+            "kind": "a11y",
+            "role": "textbox",
+            "name": "Member ID"
+          },
+          {
+            "kind": "label",
+            "label_text": "Member ID",
+            "control": "textbox"
+          },
+          {
+            "kind": "spatial",
+            "anchor_text": "Member ID",
+            "direction": "right"
+          },
+          {
+            "kind": "dom",
+            "css": "#ctl00_ContentMain_txtMemberId",
+            "xpath": null
+          }
+        ]
+      },
+      "value": "{{member_id}}",
+      "risk": "safe",
+      "checkpoint": {
+        "kind": "value_equals",
+        "target": {
+          "description": "textbox \"Member ID\", discovered via #ctl00_ContentMain_txtMemberId",
+          "strategies": [
+            {
+              "kind": "a11y",
+              "role": "textbox",
+              "name": "Member ID"
+            },
+            {
+              "kind": "label",
+              "label_text": "Member ID",
+              "control": "textbox"
+            },
+            {
+              "kind": "spatial",
+              "anchor_text": "Member ID",
+              "direction": "right"
+            },
+            {
+              "kind": "dom",
+              "css": "#ctl00_ContentMain_txtMemberId",
+              "xpath": null
+            }
+          ]
+        },
+        "expected": "{{member_id}}"
+      },
+      "wait": null,
+      "on_timeout": "fail",
+      "notes": "Checkpoint inferred by compiler: value_equals on the typed field."
+    },
+    {
+      "id": "step_003",
+      "action": "click",
+      "target": {
+        "description": "button \"Search\", discovered via #ctl00_btnSearch",
+        "strategies": [
+          {
+            "kind": "a11y",
+            "role": "button",
+            "name": "Search"
+          },
+          {
+            "kind": "spatial",
+            "anchor_text": "Member ID",
+            "direction": "right"
+          },
+          {
+            "kind": "dom",
+            "css": "#ctl00_btnSearch",
+            "xpath": null
+          }
+        ]
+      },
+      "value": null,
+      "risk": "safe",
+      "checkpoint": {
+        "kind": "element_present",
+        "target": {
+          "description": "Heading \"Account summary\"",
+          "strategies": [
+            {
+              "kind": "a11y",
+              "role": "heading",
+              "name": "Account summary"
+            }
+          ]
+        }
+      },
+      "wait": null,
+      "on_timeout": "fail",
+      "notes": "Checkpoint inferred by compiler: element_present on the resulting page's heading."
+    },
+    {
+      "id": "step_004",
+      "action": "read",
+      "target": {
+        "description": "text \"4,832.10\", discovered via #ctl00_ContentMain_lblSavings",
+        "strategies": [
+          {
+            "kind": "a11y",
+            "role": "text",
+            "name": "4,832.10"
+          },
+          {
+            "kind": "spatial",
+            "anchor_text": "Savings",
+            "direction": "right"
+          },
+          {
+            "kind": "dom",
+            "css": "#ctl00_ContentMain_lblSavings",
+            "xpath": null
+          }
+        ]
+      },
+      "value": null,
+      "risk": "safe",
+      "checkpoint": null,
+      "wait": null,
+      "on_timeout": "fail",
+      "notes": null
+    }
+  ],
+  "outcomes": [
+    {
+      "code": "MEMBER_NOT_FOUND",
+      "kind": "business",
+      "description": "Derived by the probe pass from the divergence at step_003: 'No member found for that ID.'",
+      "detect": {
+        "kind": "text_matches",
+        "pattern": "No\\ member\\ found\\ for\\ that\\ ID"
+      },
+      "check_after": [
+        "step_003"
+      ],
+      "returns": {
+        "found": false
+      },
+      "terminal": true,
+      "origin": "probed"
+    },
+    {
+      "code": "PERMISSION_DENIED",
+      "kind": "business",
+      "description": "Reviewer-added: member exists but the record is restricted; the caller role cannot view it. Not discoverable by the probe pass, which only varies the declared member_id parameter, not member status.",
+      "detect": {
+        "kind": "text_matches",
+        "pattern": "This record is restricted"
+      },
+      "check_after": [
+        "step_003"
+      ],
+      "returns": {
+        "permitted": false
+      },
+      "terminal": true,
+      "origin": "reviewed"
+    }
+  ],
+  "recoveries": [
+    {
+      "code": "CONFIRMATION_INTERSTITIAL",
+      "kind": "recoverable",
+      "description": "Reviewer-added: known intermittent disclosure-acknowledgement modal on this app. Not discoverable from a single happy-path run that never happened to hit it.",
+      "detect": {
+        "kind": "element_present",
+        "target": {
+          "description": "Disclosure dialog",
+          "strategies": [
+            {
+              "kind": "a11y",
+              "role": "dialog",
+              "name": "Disclosure"
+            }
+          ]
+        }
+      },
+      "check_after": [
+        "any"
+      ],
+      "recovery": {
+        "action": "click",
+        "target": {
+          "description": "Acknowledge button",
+          "strategies": [
+            {
+              "kind": "a11y",
+              "role": "button",
+              "name": "Acknowledge"
+            }
+          ]
+        },
+        "value": null
+      },
+      "max_attempts": 2,
+      "then": "retry_step",
+      "restart_step_id": null
+    },
+    {
+      "code": "SESSION_EXPIRED",
+      "kind": "recoverable",
+      "description": "Reviewer-added: no session yet, or it timed out. Not discoverable from a single happy-path run (docs/discovery-spec.md section 7).",
+      "detect": {
+        "kind": "url_matches",
+        "pattern": ".*/login.*"
+      },
+      "check_after": [
+        "any"
+      ],
+      "recovery": {
+        "action": "re_authenticate",
+        "target": null,
+        "value": null
+      },
+      "max_attempts": 1,
+      "then": "restart_from",
+      "restart_step_id": "step_001"
+    }
+  ],
+  "success": {
+    "checkpoint": {
+      "kind": "element_present",
+      "target": {
+        "description": "Heading \"Account summary\"",
+        "strategies": [
+          {
+            "kind": "a11y",
+            "role": "heading",
+            "name": "Account summary"
+          }
+        ]
+      }
+    },
+    "require_all_outputs": true
+  }
+}
