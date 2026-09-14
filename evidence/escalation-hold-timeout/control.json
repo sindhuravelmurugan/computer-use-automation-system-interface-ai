@@ -1,0 +1,20 @@
+{
+  "run_id": "escalation-hold-timeout",
+  "controller": "abandoned",
+  "capability_id": "member.lookup_savings_balance",
+  "capability_version": "1.0.0",
+  "step_id": "step_001",
+  "reason": "EXHAUSTED_RECOVERY",
+  "cdp_endpoint": "http://127.0.0.1:60234",
+  "page_url": "http://127.0.0.1:5001/login",
+  "screenshot_path": "evidence/escalation-hold-timeout/intervention_step_001.png",
+  "claimed_by": "the-operator",
+  "escalated_at": "2026-09-14T00:08:27.182931+00:00",
+  "claimed_at": "2026-09-14T00:08:27.272808+00:00",
+  "released_at": null,
+  "reacquired_at": null,
+  "actions_at_claim": 0,
+  "claim_timeout_s": 30.0,
+  "hold_timeout_s": 1.0,
+  "handoffs": []
+}

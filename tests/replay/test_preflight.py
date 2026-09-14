@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from tests.policy.conftest import make_config
+
+from src.policy.gate import ConfiguredPolicyGate
 from src.replay.context import ReplayContext
 from src.replay.preflight import (
     check_allowlist,
@@ -9,7 +12,7 @@ from src.replay.preflight import (
     validate_inputs,
 )
 
-ALLOWLIST = ["http://127.0.0.1:5001", "http://127.0.0.1:5002"]
+POLICY_GATE = ConfiguredPolicyGate(make_config())
 
 
 def no_override_loader(capability_id, tenant_id):
@@ -69,12 +72,14 @@ def test_input_wrong_type_is_rejected(valid_artifact):
 
 
 def test_allowed_entry_point_passes(valid_artifact):
-    assert check_allowlist(valid_artifact, ALLOWLIST) is None
+    ctx = ReplayContext(run_id="r1")
+    assert check_allowlist(valid_artifact, ctx, POLICY_GATE) is None
 
 
 def test_disallowed_entry_point_is_rejected(valid_artifact):
     valid_artifact.surface.entry_point = "https://evil.example.com/members/search"
-    err = check_allowlist(valid_artifact, ALLOWLIST)
+    ctx = ReplayContext(run_id="r1")
+    err = check_allowlist(valid_artifact, ctx, POLICY_GATE)
     assert err is not None
     assert err.code == "ENTRY_POINT_NOT_ALLOWED"
 
@@ -101,12 +106,24 @@ def test_risky_step_with_allow_risky_passes(valid_artifact):
     assert check_risk(valid_artifact, ctx) is None
 
 
+def test_risky_step_attended_is_not_rejected_in_preflight(valid_artifact):
+    """docs/policy-spec.md's verdict table: attended -> requires_approval,
+    not a pre-flight refusal. Only the definitely-denied combination
+    (unattended, no allow_risky) short-circuits before a browser opens;
+    an attended run proceeds and hits requires_approval live, when the
+    risky step is actually reached.
+    """
+    valid_artifact.steps[1].risk = "risky"
+    ctx = ReplayContext(run_id="r1", allow_risky=False, attended=True)
+    assert check_risk(valid_artifact, ctx) is None
+
+
 # --- full orchestration ------------------------------------------------------- #
 
 
 def test_run_preflight_succeeds_end_to_end(valid_artifact):
     ctx = ReplayContext(run_id="r1")
-    artifact, inputs, err = run_preflight(valid_artifact, {"member_id": "10001"}, ctx, ALLOWLIST, no_override_loader)
+    artifact, inputs, err = run_preflight(valid_artifact, {"member_id": "10001"}, ctx, POLICY_GATE, no_override_loader)
     assert err is None
     assert inputs == {"member_id": "10001"}
     assert artifact is not None
@@ -118,7 +135,7 @@ def test_run_preflight_stops_at_first_failure_without_touching_later_checks(vali
     # the approval one.
     valid_artifact.capability.approval_state = "draft"
     ctx = ReplayContext(run_id="r1", attended=False)
-    artifact, inputs, err = run_preflight(valid_artifact, {}, ctx, ALLOWLIST, no_override_loader)
+    artifact, inputs, err = run_preflight(valid_artifact, {}, ctx, POLICY_GATE, no_override_loader)
     assert artifact is None
     assert inputs is None
     assert err.code == "DRAFT_UNATTENDED"
@@ -126,6 +143,6 @@ def test_run_preflight_stops_at_first_failure_without_touching_later_checks(vali
 
 def test_run_preflight_tenant_override_not_found_is_rejected(valid_artifact):
     ctx = ReplayContext(run_id="r1", tenant_id="riverbend")
-    artifact, inputs, err = run_preflight(valid_artifact, {"member_id": "10001"}, ctx, ALLOWLIST, no_override_loader)
+    artifact, inputs, err = run_preflight(valid_artifact, {"member_id": "10001"}, ctx, POLICY_GATE, no_override_loader)
     assert artifact is None
     assert err.code == "OVERRIDE_NOT_FOUND"

@@ -1,0 +1,29 @@
+{
+  "run_id": "escalation-discovery-stuck",
+  "controller": "automation",
+  "capability_id": "discovery:Look up member 10001 and read their savings balance",
+  "capability_version": "draft",
+  "step_id": "(discovery)",
+  "reason": "STUCK",
+  "cdp_endpoint": "http://127.0.0.1:60255",
+  "page_url": "http://127.0.0.1:5001/members/search",
+  "screenshot_path": "evidence/escalation-discovery-stuck/stuck.png",
+  "claimed_by": "the-operator",
+  "escalated_at": "2026-09-14T00:08:31.896617+00:00",
+  "claimed_at": "2026-09-14T00:08:31.978212+00:00",
+  "released_at": "2026-09-14T00:08:32.228603+00:00",
+  "reacquired_at": "2026-09-14T00:08:32.243019+00:00",
+  "actions_at_claim": 0,
+  "claim_timeout_s": 30.0,
+  "hold_timeout_s": 600.0,
+  "handoffs": [
+    {
+      "claimed_by": "the-operator",
+      "escalated_at": "2026-09-14T00:08:31.896617+00:00",
+      "claimed_at": "2026-09-14T00:08:31.978212+00:00",
+      "released_at": "2026-09-14T00:08:32.228603+00:00",
+      "duration_s": 0.250391,
+      "action_count": 4
+    }
+  ]
+}

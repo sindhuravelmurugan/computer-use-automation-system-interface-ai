@@ -3,24 +3,33 @@ from __future__ import annotations
 import json
 
 from tests.agent.conftest import FakeSurface, ScriptedLLMClient
+from tests.policy.conftest import make_config
 
 from src.agent.loop import DiscoveryAgent
-from src.agent.trace import DISCOVERY_FILE, TRACE_FILE
+from src.agent.trace import DISCOVERY_FILE, TRACE_FILE, TraceRecorder
 from src.agent.types import AgentAction
+from src.policy.config import AllowlistConfig
+from src.policy.gate import ConfiguredPolicyGate
+from src.policy.redaction import Redactor
 from src.replay.evidence import EvidenceWriter
-from src.replay.policy import AllowAllGate
+
+FAKE_APP_CONFIG = make_config(
+    allowlist=AllowlistConfig(
+        domains=("fake",),
+        routes=("/start", "/start/result"),
+        action_kinds=("navigate", "click", "type", "select", "read", "wait_for", "assert"),
+    )
+)
 
 
 def _run(tmp_path, actions):
     surface = FakeSurface()
     llm = ScriptedLLMClient(actions)
-    evidence = EvidenceWriter("test-run", base_dir=tmp_path)
-    from src.agent.trace import TraceRecorder
-
+    redactor = Redactor(FAKE_APP_CONFIG.redaction)
+    evidence = EvidenceWriter("test-run", base_dir=tmp_path, redactor=redactor)
     trace = TraceRecorder(evidence)
     agent = DiscoveryAgent(
-        surface, llm, policy_gate=AllowAllGate(), evidence_run_id="test-run", trace=trace,
-        entry_allowlist=["http://fake"],
+        surface, llm, policy_gate=ConfiguredPolicyGate(FAKE_APP_CONFIG), evidence_run_id="test-run", trace=trace,
     )
     result = agent.run("test goal", "http://fake/start", max_steps=5)
     trace_text = (tmp_path / "test-run" / TRACE_FILE).read_text()

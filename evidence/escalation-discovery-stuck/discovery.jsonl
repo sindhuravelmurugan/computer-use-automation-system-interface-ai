@@ -1,0 +1,7 @@
+{"seq": 1, "event": "bootstrap_login"}
+{"seq": 2, "event": "decision", "step": 0, "kind": "stuck"}
+{"seq": 3, "event": "escalation", "reason": "STUCK", "detail": "forced stuck for escalation acceptance"}
+{"seq": 4, "event": "control_released", "to": "human"}
+{"seq": 5, "event": "control_reacquired", "screenshot": "evidence/escalation-discovery-stuck/reacquired.png"}
+{"seq": 6, "event": "decision", "step": 1, "kind": "done"}
+{"seq": 7, "event": "stop", "reason": "SUCCESS"}

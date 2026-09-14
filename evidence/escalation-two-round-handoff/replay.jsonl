@@ -1,0 +1,12 @@
+{"seq": 1, "event": "action", "step_id": "step_001", "kind": "navigate", "duration_ms": 737}
+{"seq": 2, "event": "recovery", "code": "SESSION_EXPIRED", "step_id": "step_001", "attempt": 1}
+{"seq": 3, "event": "action", "step_id": "step_001", "kind": "navigate", "duration_ms": 703}
+{"seq": 4, "event": "resolve", "step_id": "step_002", "strategy_index": 0, "status": "resolved"}
+{"seq": 5, "event": "policy_denied", "step_id": "step_002", "verdict": "requires_approval", "rule": "test.force_approval", "reason": "forced for escalation acceptance"}
+{"seq": 6, "event": "escalation", "step_id": "step_002", "reason": "POLICY_REQUIRES_APPROVAL", "session_held": true}
+{"seq": 7, "event": "control_released", "to": "human", "step_id": "step_002", "reason": "POLICY_REQUIRES_APPROVAL"}
+{"seq": 8, "event": "control_reacquired", "step_id": "step_002", "screenshot": "evidence/escalation-two-round-handoff/reacquire_step_002_1.png"}
+{"seq": 9, "event": "handback", "step_id": "step_002", "verdict": "unrecognized"}
+{"seq": 10, "event": "control_released", "to": "human", "step_id": "step_002", "reason": "HANDBACK_UNVERIFIED"}
+{"seq": 11, "event": "control_reacquired", "step_id": "step_002", "screenshot": "evidence/escalation-two-round-handoff/reacquire_step_002_2.png"}
+{"seq": 12, "event": "handback", "step_id": "step_002", "verdict": "capability_success"}

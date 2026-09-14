@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 from datetime import date
 from decimal import Decimal, InvalidOperation
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 from src.replay.context import ReplayContext
 from src.replay.overrides import OverrideError, merge_override
@@ -17,6 +17,10 @@ from src.schema.artifact import CapabilityArtifact
 from src.schema.io import InputParam
 from src.schema.overrides import TenantOverride
 from src.schema.result import ErrorDetail
+from src.surface.types import Action
+
+if TYPE_CHECKING:
+    from src.policy import PolicyGate
 
 OverrideLoader = Callable[[str, str], "TenantOverride | None"]
 
@@ -124,24 +128,39 @@ def apply_override(
     return merged, None
 
 
-def check_allowlist(artifact: CapabilityArtifact, allowlist: list[str]) -> ErrorDetail | None:
+def check_allowlist(
+    artifact: CapabilityArtifact, context: ReplayContext, policy_gate: "PolicyGate"
+) -> ErrorDetail | None:
+    """docs/policy-spec.md: the entry point goes through the same gate
+    every other navigate action does -- not a separate flat prefix list.
+    Cheap and real (docs/replay-spec.md §2.4): checked before a browser
+    ever opens.
+    """
     entry_point = artifact.surface.entry_point
-    if not any(entry_point.startswith(prefix) for prefix in allowlist):
+    decision = policy_gate.check(Action(kind="navigate", url=entry_point), context)
+    if decision.verdict != "allow":
         return ErrorDetail(
             code="ENTRY_POINT_NOT_ALLOWED",
-            expected=f"entry_point prefixed by one of {allowlist!r}",
-            observed=entry_point,
+            expected="entry_point allowed by the policy gate",
+            observed=f"entry_point={entry_point!r} {decision.verdict} by rule {decision.rule!r}: {decision.reason}",
         )
     return None
 
 
 def check_risk(artifact: CapabilityArtifact, context: ReplayContext) -> ErrorDetail | None:
+    """Only the definitely-denied combination -- unattended and no
+    allow_risky opt-in -- is rejected here. An attended run with a risky
+    step is *not* rejected in pre-flight: docs/policy-spec.md's verdict
+    table says attended -> requires_approval, which the engine surfaces by
+    escalating when that step is actually reached, not by refusing the
+    whole run before a human who is right there gets a chance to approve it.
+    """
     risky_steps = [step.id for step in artifact.steps if step.risk == "risky"]
-    if risky_steps and not context.allow_risky:
+    if risky_steps and not context.allow_risky and not context.attended:
         return ErrorDetail(
             code="RISKY_STEPS_NOT_ALLOWED",
-            expected="allow_risky=True, or no risky steps in this artifact",
-            observed=f"risky steps present: {risky_steps!r}, allow_risky=False",
+            expected="allow_risky=True, an attended session, or no risky steps in this artifact",
+            observed=f"risky steps present: {risky_steps!r}, allow_risky=False, attended=False",
         )
     return None
 
@@ -150,7 +169,7 @@ def run_preflight(
     artifact: CapabilityArtifact,
     raw_inputs: dict[str, Any],
     context: ReplayContext,
-    allowlist: list[str],
+    policy_gate: "PolicyGate",
     override_loader: OverrideLoader,
 ) -> tuple[CapabilityArtifact | None, dict[str, Any] | None, ErrorDetail | None]:
     error = check_approval(artifact, context)
@@ -166,7 +185,7 @@ def run_preflight(
         return None, None, error
     assert merged_artifact is not None
 
-    error = check_allowlist(merged_artifact, allowlist)
+    error = check_allowlist(merged_artifact, context, policy_gate)
     if error is not None:
         return None, None, error
 

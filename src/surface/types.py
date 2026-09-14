@@ -32,10 +32,13 @@ __all__ = [
     "SessionHandle",
     "ActionKind",
     "ErrorCode",
+    "RiskLevel",
+    "ControllerViolation",
 ]
 
 ActionKind = Literal["navigate", "click", "type", "select", "read", "wait_for", "assert"]
 ErrorCode = Literal["NOT_FOUND", "AMBIGUOUS", "TIMEOUT", "NOT_INTERACTABLE"]
+RiskLevel = Literal["safe", "risky"]
 
 
 @dataclass(frozen=True)
@@ -99,6 +102,12 @@ class Action:
     value: str | None = None
     url: str | None = None
     wait: WaitSpec = field(default_factory=WaitSpec)
+    # docs/policy-spec.md §3: on replay this is the artifact's own declared
+    # Step.risk -- authoritative, a human reviewed it. Left None means
+    # unclassified (discovery, or any auxiliary action like a login
+    # sub-step), and the policy gate falls back to heuristic classification
+    # from the action itself.
+    risk: RiskLevel | None = None
 
 
 @dataclass
@@ -112,7 +121,23 @@ class ActionResult:
 
 @dataclass(frozen=True)
 class SessionHandle:
-    """Opaque handle for control transfer. See ``release``/``reacquire``."""
+    """Opaque handle for control transfer. See ``release``/``reacquire``
+    (docs/escalation-spec.md §3). ``cdp_endpoint`` is the HTTP address of the
+    browser's remote-debugging port -- literally the same browser process
+    that was already running, not a fresh one, which is what makes
+    reconnection real rather than approximate.
+    """
 
     cdp_endpoint: str
-    browser_context_id: str
+    page_url: str
+    run_id: str
+    released_at: datetime
+
+
+class ControllerViolation(RuntimeError):
+    """Raised by ``Surface.act()`` when automation attempts an action while
+    control of the session has been ceded to a human (docs/escalation-
+    spec.md §1: "Only the controller may act."). This is the enforcement
+    that makes session ownership meaningful rather than advisory -- the same
+    reasoning as the policy gate being a single choke point.
+    """

@@ -1,0 +1,37 @@
+{
+  "run_id": "escalation-two-round-handoff",
+  "controller": "automation",
+  "capability_id": "member.lookup_savings_balance",
+  "capability_version": "1.0.0",
+  "step_id": "step_002",
+  "reason": "HANDBACK_UNVERIFIED",
+  "cdp_endpoint": "http://127.0.0.1:60184",
+  "page_url": "http://127.0.0.1:5001/members/search",
+  "screenshot_path": "evidence/escalation-two-round-handoff/intervention_step_002.png",
+  "claimed_by": "the-operator",
+  "escalated_at": "2026-09-14T00:08:16.717580+00:00",
+  "claimed_at": "2026-09-14T00:08:16.784618+00:00",
+  "released_at": "2026-09-14T00:08:16.846566+00:00",
+  "reacquired_at": "2026-09-14T00:08:16.956520+00:00",
+  "actions_at_claim": 1,
+  "claim_timeout_s": 30.0,
+  "hold_timeout_s": 30.0,
+  "handoffs": [
+    {
+      "claimed_by": "the-operator",
+      "escalated_at": "2026-09-14T00:08:15.402072+00:00",
+      "claimed_at": "2026-09-14T00:08:16.400421+00:00",
+      "released_at": "2026-09-14T00:08:16.677641+00:00",
+      "duration_s": 0.27722,
+      "action_count": 1
+    },
+    {
+      "claimed_by": "the-operator",
+      "escalated_at": "2026-09-14T00:08:16.717580+00:00",
+      "claimed_at": "2026-09-14T00:08:16.784618+00:00",
+      "released_at": "2026-09-14T00:08:16.846566+00:00",
+      "duration_s": 0.061948,
+      "action_count": 1
+    }
+  ]
+}

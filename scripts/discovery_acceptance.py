@@ -28,10 +28,10 @@ import requests
 from src.agent.loop import DiscoveryAgent
 from src.agent.trace import TraceRecorder
 from src.agent.types import AgentAction
+from src.policy import ConfiguredPolicyGate, PolicyConfig, Redactor
 from src.replay.context import ReplayContext
 from src.replay.engine import ReplayEngine
 from src.replay.evidence import EvidenceWriter
-from src.replay.policy import AllowAllGate
 from src.schema.artifact import CapabilityArtifact
 from src.schema.recoveries import Recovery
 from src.surface.web import WebSurface
@@ -266,8 +266,9 @@ def main() -> int:
             return self._actions.pop(0)
 
     reset_app()
+    policy_config = PolicyConfig.load()
     scripted_run_id = "discovery-accept-max-steps"
-    scripted_evidence = EvidenceWriter(scripted_run_id)
+    scripted_evidence = EvidenceWriter(scripted_run_id, redactor=Redactor(policy_config.redaction))
     scripted_trace = TraceRecorder(scripted_evidence)
     scripted_agent = DiscoveryAgent(
         WebSurface(headless=True),
@@ -277,10 +278,9 @@ def main() -> int:
                 AgentAction(kind="click", ref="not-a-real-ref-2"),
             ]
         ),
-        policy_gate=AllowAllGate(),
+        policy_gate=ConfiguredPolicyGate(policy_config),
         evidence_run_id=scripted_run_id,
         trace=scripted_trace,
-        entry_allowlist=[MERIDIAN],
     )
     scripted_result = scripted_agent.run(GOAL, f"{MERIDIAN}/members/search", max_steps=2)
     scripted_artifact_exists = (Path("evidence") / scripted_run_id / "artifact.draft.json").exists()
@@ -299,16 +299,17 @@ def main() -> int:
 
     reset_app()
     disallowed_run_id = "discovery-accept-disallowed-domain"
-    disallowed_evidence = EvidenceWriter(disallowed_run_id)
+    disallowed_evidence = EvidenceWriter(disallowed_run_id, redactor=Redactor(policy_config.redaction))
     disallowed_trace = TraceRecorder(disallowed_evidence)
     tracking_surface = WebSurface(headless=True)
     disallowed_agent = DiscoveryAgent(
         tracking_surface,
         _ScriptedLLMClient([AgentAction(kind="done", summary="unreachable")]),
-        policy_gate=AllowAllGate(),
+        # The real, shipped allowlist -- evil.example.com is deliberately
+        # not in it. Deny by default, not a special-purpose test gate.
+        policy_gate=ConfiguredPolicyGate(policy_config),
         evidence_run_id=disallowed_run_id,
         trace=disallowed_trace,
-        entry_allowlist=[MERIDIAN],  # deliberately does not include the target below
     )
     disallowed_result = disallowed_agent.run(GOAL, "https://evil.example.com/members/search", max_steps=5)
     check(

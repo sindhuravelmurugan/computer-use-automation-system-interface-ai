@@ -22,9 +22,9 @@ from pathlib import Path
 
 import requests
 
+from src.policy import ConfiguredPolicyGate, PolicyDecision, PolicyGate
 from src.replay.context import ReplayContext
 from src.replay.engine import ReplayEngine
-from src.replay.policy import PolicyDecision
 from src.schema.artifact import CapabilityArtifact
 from src.surface.web import WebSurface
 
@@ -71,24 +71,25 @@ class TrackingFactory:
 
 class ArmFlagBeforeNthAction:
     """A PolicyGate that arms a /_test/config flag deterministically right
-    before the Nth action the engine takes, then defers to AllowAllGate.
+    before the Nth action the engine takes, then defers to the real gate.
     Used to inject expire_session mid-run without any timing-based sleep or
     thread race: the gate runs synchronously inside the engine's own loop,
     exactly between two actions.
     """
 
-    def __init__(self, arm_before: int, **flags) -> None:
+    def __init__(self, arm_before: int, gate: PolicyGate, **flags) -> None:
         self._arm_before = arm_before
         self._flags = flags
         self._count = 0
         self.armed = False
+        self._gate = gate
 
     def check(self, action, ctx) -> PolicyDecision:
         self._count += 1
         if self._count == self._arm_before and not self.armed:
             configure(**self._flags)
             self.armed = True
-        return PolicyDecision(allowed=True)
+        return self._gate.check(action, ctx)
 
 
 def read_jsonl(run_id: str) -> list[dict]:
@@ -194,7 +195,7 @@ def main() -> int:
     # next real server round-trip, which is what actually observes the
     # bumped epoch. Deterministic: the gate runs synchronously inside the
     # engine's own loop, not on a timer.
-    gate = ArmFlagBeforeNthAction(arm_before=8, expire_session=True)
+    gate = ArmFlagBeforeNthAction(arm_before=8, gate=ConfiguredPolicyGate.from_file(), expire_session=True)
     engine = ReplayEngine(TrackingFactory(), policy_gate=gate)
     ctx = ReplayContext(run_id="replay-session-expired")
     result = engine.run(artifact, {"member_id": "10001"}, ctx)
@@ -220,7 +221,7 @@ def main() -> int:
 
     # --- check 6: latency absorbed by condition-based wait, not a fixed sleep - #
     reset_app()
-    gate = ArmFlagBeforeNthAction(arm_before=8, latency_ms=4000)
+    gate = ArmFlagBeforeNthAction(arm_before=8, gate=ConfiguredPolicyGate.from_file(), latency_ms=4000)
     engine = ReplayEngine(TrackingFactory(), policy_gate=gate)
     ctx = ReplayContext(run_id="replay-latency-4000")
     result = engine.run(artifact, {"member_id": "10001"}, ctx)
@@ -232,7 +233,7 @@ def main() -> int:
 
     # --- check 7: injected server error is a hard failure -------------------- #
     reset_app()
-    gate = ArmFlagBeforeNthAction(arm_before=8, error_on_next=True)
+    gate = ArmFlagBeforeNthAction(arm_before=8, gate=ConfiguredPolicyGate.from_file(), error_on_next=True)
     engine = ReplayEngine(TrackingFactory(), policy_gate=gate)
     ctx = ReplayContext(run_id="replay-error-on-next")
     result = engine.run(artifact, {"member_id": "10001"}, ctx)
@@ -269,6 +270,12 @@ def main() -> int:
     )
 
     # --- check 9: attended vs unattended session holding ---------------------- #
+    # Full claim -> handoff -> reacquire coverage lives in
+    # scripts/escalation_acceptance.py; this check stays narrow, as it was
+    # before that phase existed: does an unattended read-only escalation
+    # close immediately, and does an attended one actually hold the session
+    # open for a human? A short claim_timeout_s keeps the attended half from
+    # sitting through the real default (5 minutes) when nobody claims it.
     reset_app()
     configure(modal_on_next=50)
     engine_unattended = ReplayEngine(TrackingFactory())
@@ -280,31 +287,25 @@ def main() -> int:
 
     reset_app()
     configure(modal_on_next=50)
-    engine_attended = ReplayEngine(TrackingFactory())
+    engine_attended = ReplayEngine(TrackingFactory(), claim_timeout_s=2.0, handoff_poll_interval_s=0.2)
     ctx_attended = ReplayContext(run_id="replay-escalation-attended", attended=True)
-    engine_attended.run(artifact, {"member_id": "10001"}, ctx_attended)
+    attended_result = engine_attended.run(artifact, {"member_id": "10001"}, ctx_attended)
     attended_intervention = json.loads(
         (Path(EVIDENCE_DIR) / ctx_attended.run_id / "intervention.json").read_text()
     )
-    # session_held=True leaves the browser open -- verify it is still alive,
-    # then close it ourselves (real takeover is step 7).
-    attended_surface_alive = False
-    if engine_attended.last_surface is not None:
-        try:
-            engine_attended.last_surface.observe()
-            attended_surface_alive = True
-        except Exception:
-            attended_surface_alive = False
-        finally:
-            engine_attended.last_surface.close(keep_trace=False)
+    control_after = json.loads((Path(EVIDENCE_DIR) / ctx_attended.run_id / "control.json").read_text())
     check(
-        "attended=False on a read-only flow closes the session after escalation; attended=True holds it",
+        "attended=False on a read-only flow closes the session immediately; attended=True holds it open "
+        "for a human (AWAITING_HUMAN in control.json) and, with nobody claiming, times out to ABANDONED",
         unattended_intervention["session_held"] is False
         and attended_intervention["session_held"] is True
-        and attended_surface_alive,
+        and control_after["controller"] == "abandoned"
+        and attended_result.status == "failure"
+        and attended_result.error is not None
+        and attended_result.error.code == "CLAIM_TIMEOUT",
         f"unattended_held={unattended_intervention['session_held']}, "
         f"attended_held={attended_intervention['session_held']}, "
-        f"attended_surface_alive={attended_surface_alive}",
+        f"control_after={control_after['controller']}, attended_error={attended_result.error}",
     )
 
     # --- check 10: bad input rejected in pre-flight, browser never opened ----- #

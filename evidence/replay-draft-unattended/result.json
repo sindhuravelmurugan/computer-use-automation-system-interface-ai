@@ -1,0 +1,21 @@
+{
+  "status": "failure",
+  "capability_id": "member.lookup_savings_balance",
+  "capability_version": "1.0.0",
+  "run_id": "replay-draft-unattended",
+  "outputs": null,
+  "outcome": null,
+  "error": {
+    "code": "DRAFT_UNATTENDED",
+    "step_id": null,
+    "expected": "approval_state != 'draft', or an attended session",
+    "observed": "approval_state='draft', attended=False",
+    "strategy_used": null,
+    "evidence": null
+  },
+  "recoveries_applied": [],
+  "handoffs": [],
+  "human_intervention": false,
+  "duration_ms": 0,
+  "steps_completed": 0
+}

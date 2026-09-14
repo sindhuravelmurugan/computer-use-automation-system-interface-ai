@@ -1,0 +1,27 @@
+{
+  "allowlist": {
+    "domains": ["127.0.0.1:5001", "127.0.0.1:5002"],
+    "routes": [
+      "/login",
+      "/members/search",
+      "/members/search-frame",
+      "/members/:member_id",
+      "/members/:member_id/subaccount/new",
+      "/members/:member_id/subaccount/review",
+      "/members/:member_id/subaccount/confirm"
+    ],
+    "action_kinds": ["navigate", "click", "type", "select", "read", "wait_for", "assert"]
+  },
+  "risk": {
+    "risky_route_patterns": ["/subaccount/confirm"],
+    "risky_control_names": ["confirm", "submit", "delete", "transfer", "post", "commit"],
+    "unattended_risky": "deny"
+  },
+  "redaction": {
+    "always_redact_keys": ["password", "token", "ssn", "tax_id", "card_number"],
+    "patterns": {
+      "ssn": "\\b\\d{3}-\\d{2}-\\d{4}\\b",
+      "card": "\\b(?:\\d[ -]*?){13,16}\\b"
+    }
+  }
+}

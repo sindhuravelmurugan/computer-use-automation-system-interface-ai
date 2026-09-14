@@ -1,0 +1,4 @@
+{"seq": 1, "at": "2026-09-14T00:08:32.225847+00:00", "kind": "input", "role": "textbox", "name": "Member ID", "frame_path": ["main", "frmSearch"], "url": "http://127.0.0.1:5001/members/search", "value_redacted": true}
+{"seq": 2, "at": "2026-09-14T00:08:32.226387+00:00", "kind": "change", "role": "textbox", "name": "Member ID", "frame_path": ["main", "frmSearch"], "url": "http://127.0.0.1:5001/members/search", "value_redacted": true}
+{"seq": 3, "at": "2026-09-14T00:08:32.227280+00:00", "kind": "click", "role": "button", "name": "Search", "frame_path": ["main", "frmSearch"], "url": "http://127.0.0.1:5001/members/search", "value_redacted": false}
+{"seq": 4, "at": "2026-09-14T00:08:32.227673+00:00", "kind": "submit", "role": "form", "name": "Member ID", "frame_path": ["main", "frmSearch"], "url": "http://127.0.0.1:5001/members/search", "value_redacted": false}

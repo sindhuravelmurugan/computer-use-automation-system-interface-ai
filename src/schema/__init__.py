@@ -42,7 +42,7 @@ from src.schema.overrides import (
     TenantOverride,
 )
 from src.schema.recoveries import Recovery, RecoveryAction, ThenAction
-from src.schema.result import ErrorDetail, OutcomeResult, RecoveryApplied, ReplayResult, ReplayStatus
+from src.schema.result import ErrorDetail, HandoffRecord, OutcomeResult, RecoveryApplied, ReplayResult, ReplayStatus
 from src.schema.steps import ActionType, OnTimeout, RiskLevel, Step
 from src.schema.success import SuccessCondition
 
@@ -85,6 +85,7 @@ __all__ = [
     "RecoveryAction",
     "ThenAction",
     "ErrorDetail",
+    "HandoffRecord",
     "OutcomeResult",
     "RecoveryApplied",
     "ReplayResult",

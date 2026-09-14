@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from src.replay.context import ReplayContext
     from src.surface.protocol import Surface
 
-EscalationReason = Literal["EXHAUSTED_RECOVERY", "ESCALATE_DIRECTIVE"]
+EscalationReason = Literal["EXHAUSTED_RECOVERY", "ESCALATE_DIRECTIVE", "POLICY_REQUIRES_APPROVAL"]
 
 
 @dataclass

@@ -31,6 +31,19 @@ class RecoveryApplied(BaseModel):
     attempts: int
 
 
+class HandoffRecord(BaseModel):
+    """One escalate-claim-release cycle (docs/escalation-spec.md §6:
+    "who, when, how long, how many actions").
+    """
+
+    claimed_by: str | None
+    escalated_at: str | None
+    claimed_at: str | None
+    released_at: str | None
+    duration_s: float | None
+    action_count: int
+
+
 class ReplayResult(BaseModel):
     status: ReplayStatus
     capability_id: str
@@ -42,6 +55,13 @@ class ReplayResult(BaseModel):
     error: ErrorDetail | None = None
 
     recoveries_applied: list[RecoveryApplied] = []
+    # Populated whenever the run ceded control to a human at least once,
+    # regardless of how it ultimately ended (docs/escalation-spec.md §6).
+    handoffs: list[HandoffRecord] = []
+    # True only for the "human completed the flow manually" success path
+    # (docs/escalation-spec.md §5): the engine detected the capability-level
+    # success condition on reacquire and re-executed nothing.
+    human_intervention: bool = False
 
     duration_ms: int
     steps_completed: int

@@ -25,6 +25,8 @@
       "attempts": 2
     }
   ],
-  "duration_ms": 4541,
+  "handoffs": [],
+  "human_intervention": false,
+  "duration_ms": 4509,
   "steps_completed": 0
 }

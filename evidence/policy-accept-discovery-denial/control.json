@@ -1,0 +1,20 @@
+{
+  "run_id": "policy-accept-discovery-denial",
+  "controller": "abandoned",
+  "capability_id": "discovery:Look up member 10001 and read their savings balance",
+  "capability_version": "draft",
+  "step_id": "(discovery)",
+  "reason": "STUCK",
+  "cdp_endpoint": "http://127.0.0.1:60802",
+  "page_url": "http://127.0.0.1:5001/members/search",
+  "screenshot_path": "evidence/policy-accept-discovery-denial/stuck.png",
+  "claimed_by": null,
+  "escalated_at": "2026-09-14T00:11:19.901987+00:00",
+  "claimed_at": null,
+  "released_at": null,
+  "reacquired_at": null,
+  "actions_at_claim": 0,
+  "claim_timeout_s": 2.0,
+  "hold_timeout_s": 600.0,
+  "handoffs": []
+}

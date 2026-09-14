@@ -15,15 +15,16 @@ from src.agent.loop import DEFAULT_MAX_STEPS, DEFAULT_TIMEOUT_S, DiscoveryAgent
 from src.agent.trace import TraceRecorder
 from src.compiler.compiler import compile_trace
 from src.compiler.probe import generate_invalid_probe_value, run_probe
+from src.escalation.operator_app import DEFAULT_PORT as DEFAULT_OPERATOR_PORT
+from src.escalation.operator_app import create_app as create_operator_app
+from src.policy import ConfiguredPolicyGate, PolicyConfig, Redactor
+from src.policy.config import DEFAULT_CONFIG_PATH
 from src.replay.evidence import EvidenceWriter
-from src.replay.policy import AllowlistPolicyGate
 from src.surface.web import WebSurface
 
 load_dotenv()
 
 app = typer.Typer(add_completion=False, no_args_is_help=True)
-
-DEFAULT_ALLOWLIST = ["http://127.0.0.1:5001", "http://127.0.0.1:5002"]
 
 
 @app.callback()
@@ -38,26 +39,22 @@ def discover(
     max_steps: int = typer.Option(DEFAULT_MAX_STEPS, "--max-steps", help="Hard cap on steps."),
     timeout: float = typer.Option(DEFAULT_TIMEOUT_S, "--timeout", help="Wall-clock seconds before TIMEOUT."),
     provider: str = typer.Option(None, "--provider", help="gemini|anthropic; defaults to LLM_PROVIDER."),
-    allowlist: str = typer.Option(
-        ",".join(DEFAULT_ALLOWLIST), "--allowlist", help="Comma-separated allowed URL prefixes."
-    ),
+    policy_config: str = typer.Option(str(DEFAULT_CONFIG_PATH), "--policy-config", help="Path to policy.json."),
     keep_trace: bool = typer.Option(False, "--keep-trace", help="Keep the Playwright trace.zip."),
     headless: bool = typer.Option(True, "--headless/--headed"),
     probe: bool = typer.Option(True, "--probe/--no-probe", help="Run the probe pass on success."),
     run_id: str = typer.Option(None, "--run-id", help="Defaults to a generated id."),
 ) -> None:
     run_id = run_id or f"discover-{int(time.time())}"
-    allowlist_prefixes = [p.strip() for p in allowlist.split(",") if p.strip()]
 
+    config = PolicyConfig.load(policy_config)
     llm = build_llm_client(provider)
-    evidence = EvidenceWriter(run_id)
+    evidence = EvidenceWriter(run_id, redactor=Redactor(config.redaction))
     trace = TraceRecorder(evidence)
     surface = WebSurface(headless=headless)
-    gate = AllowlistPolicyGate(allowlist_prefixes)
+    gate = ConfiguredPolicyGate(config)
 
-    agent = DiscoveryAgent(
-        surface, llm, policy_gate=gate, evidence_run_id=run_id, trace=trace, entry_allowlist=allowlist_prefixes
-    )
+    agent = DiscoveryAgent(surface, llm, policy_gate=gate, evidence_run_id=run_id, trace=trace)
     result = agent.run(goal, target, max_steps=max_steps, timeout_s=timeout, keep_trace=keep_trace)
 
     typer.echo(f"run_id={run_id} stop_reason={result.stop_reason}")
@@ -94,6 +91,19 @@ def discover(
         typer.echo("review notes:")
         for note in draft.review_notes:
             typer.echo(f"  - {note}")
+
+
+@app.command()
+def operator(
+    evidence_dir: str = typer.Option("evidence", "--evidence-dir", help="Where control.json/human_actions.jsonl live."),
+    port: int = typer.Option(DEFAULT_OPERATOR_PORT, "--port", help="Port for the operator Flask app."),
+) -> None:
+    """The mock operator surface (docs/escalation-spec.md §7): list open
+    intervention requests, claim one, and release it back when done. A
+    separate process/port from both the target app and this CLI's own
+    discovery runs -- it only reads and writes evidence/{run_id}/control.json.
+    """
+    create_operator_app(evidence_dir).run(port=port, debug=False)
 
 
 if __name__ == "__main__":

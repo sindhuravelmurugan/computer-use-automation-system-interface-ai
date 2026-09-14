@@ -42,3 +42,11 @@ class Surface(Protocol):
     def release(self) -> SessionHandle: ...
 
     def reacquire(self, handle: SessionHandle) -> None: ...
+
+    # Called periodically by whoever is blocked waiting out a handoff
+    # (docs/escalation-spec.md §1's AWAITING_HUMAN/HUMAN wait). A released
+    # session's captured human actions are otherwise only guaranteed to be
+    # flushed once the waiter makes its next real call into the surface
+    # (reacquire) -- too late for the hold-timeout clock, which needs to
+    # see recent activity while it's still waiting, not after.
+    def pump_events(self) -> None: ...

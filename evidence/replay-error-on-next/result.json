@@ -20,6 +20,8 @@
       "attempts": 1
     }
   ],
-  "duration_ms": 5136,
+  "handoffs": [],
+  "human_intervention": false,
+  "duration_ms": 5168,
   "steps_completed": 2
 }

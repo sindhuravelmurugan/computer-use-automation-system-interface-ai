@@ -1,0 +1,39 @@
+{
+  "status": "success",
+  "capability_id": "member.lookup_savings_balance",
+  "capability_version": "1.0.0",
+  "run_id": "escalation-two-round-handoff",
+  "outputs": {
+    "savings_balance": "REDACTED"
+  },
+  "outcome": null,
+  "error": null,
+  "recoveries_applied": [
+    {
+      "code": "SESSION_EXPIRED",
+      "step_id": "step_001",
+      "attempts": 1
+    }
+  ],
+  "handoffs": [
+    {
+      "claimed_by": "the-operator",
+      "escalated_at": "2026-09-14T00:08:15.402072+00:00",
+      "claimed_at": "2026-09-14T00:08:16.400421+00:00",
+      "released_at": "2026-09-14T00:08:16.677641+00:00",
+      "duration_s": 0.27722,
+      "action_count": 1
+    },
+    {
+      "claimed_by": "the-operator",
+      "escalated_at": "2026-09-14T00:08:16.717580+00:00",
+      "claimed_at": "2026-09-14T00:08:16.784618+00:00",
+      "released_at": "2026-09-14T00:08:16.846566+00:00",
+      "duration_s": 0.061948,
+      "action_count": 1
+    }
+  ],
+  "human_intervention": true,
+  "duration_ms": 6281,
+  "steps_completed": 1
+}

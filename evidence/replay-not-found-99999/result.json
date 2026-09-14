@@ -2,7 +2,7 @@
   "status": "business_outcome",
   "capability_id": "member.lookup_savings_balance",
   "capability_version": "1.0.0",
-  "run_id": "replay-not-found-99999",
+  "run_id": "replay-not-found-REDACTED",
   "outputs": null,
   "outcome": {
     "code": "MEMBER_NOT_FOUND",
@@ -18,6 +18,8 @@
       "attempts": 1
     }
   ],
-  "duration_ms": 5067,
+  "handoffs": [],
+  "human_intervention": false,
+  "duration_ms": 5078,
   "steps_completed": 2
 }

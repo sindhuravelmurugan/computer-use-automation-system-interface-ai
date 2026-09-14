@@ -12,6 +12,7 @@ from src.surface.serialize import serialize_observation
 from src.surface.types import (
     Action,
     ActionResult,
+    ControllerViolation,
     LocatorBundle,
     Observation,
     PageSignature,
@@ -27,6 +28,7 @@ __all__ = [
     "serialize_observation",
     "Action",
     "ActionResult",
+    "ControllerViolation",
     "LocatorBundle",
     "Observation",
     "PageSignature",

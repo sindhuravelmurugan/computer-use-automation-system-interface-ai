@@ -21,6 +21,7 @@ version no longer exposes.
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 import socket
 import time
@@ -49,6 +50,7 @@ from src.surface.pruning import prune_nodes
 from src.surface.types import (
     Action,
     ActionResult,
+    ControllerViolation,
     ErrorCode,
     LocatorBundle,
     Observation,
@@ -266,6 +268,43 @@ _DESCRIBE_JS = (
 
 _TAG_JS = "(el, ref) => { el.setAttribute('data-surface-ref', ref); }"
 
+# --- human action capture (docs/escalation-spec.md §4) -------------------- #
+#
+# Installed once (via Playwright's context-level expose_binding /
+# add_init_script -- the same CDP primitives, Runtime.addBinding and
+# Page.addScriptToEvaluateOnNewDocument, a hand-rolled CDP session would
+# call) and then gated on/off by `_capture_active` across release()/
+# reacquire() pairs, rather than added and torn down each time: Playwright
+# has no clean "remove a binding" call, and re-adding an init script on every
+# release would leak listeners across navigations. What matters per the spec
+# is that nothing is recorded outside a human's turn, which the gate gives
+# for free without needing the removal itself to be real.
+# Written as a self-invoking expression -- not an arrow function Playwright
+# calls with an argument -- so the exact same string works both as
+# `frame.evaluate(...)` (installs on the currently-loaded document) and as
+# `context.add_init_script(...)` (installs on every future document), no
+# separate wrapping needed for either call site.
+_HUMAN_CAPTURE_JS = (
+    "(() => {\n"
+    + _JS_HELPERS
+    + r"""
+  if (window.__humanCaptureInstalled) return;
+  window.__humanCaptureInstalled = true;
+  const report = (kind, el, valueRedacted) => {
+    if (!(el instanceof Element)) return;
+    const tag = el.tagName.toLowerCase();
+    const role = computeRole(el) || tag;
+    const name = (computeName(el, tag) || el.textContent.trim()).slice(0, 120);
+    window.__humanAction(JSON.stringify({kind, role, name, value_redacted: !!valueRedacted}));
+  };
+  document.addEventListener('click', (e) => report('click', e.target, false), true);
+  document.addEventListener('input', (e) => report('input', e.target, true), true);
+  document.addEventListener('change', (e) => report('change', e.target, true), true);
+  document.addEventListener('submit', (e) => report('submit', e.target, false), true);
+})()
+"""
+)
+
 _APP_VERSION_RE = re.compile(r"v\d+\.\d+\.\d+")
 
 
@@ -295,6 +334,12 @@ class WebSurface:
         self._page: Page | None = None
         self._run_id: str | None = None
         self._debug_port: int | None = None
+        # Control-transfer state (docs/escalation-spec.md §1, §3-4).
+        self._controller_released = False
+        self._trace_segment = 0
+        self._capture_installed = False
+        self._capture_active = False
+        self._human_action_seq = 0
 
     # --- lifecycle --------------------------------------------------- #
 
@@ -467,6 +512,11 @@ class WebSurface:
 
     def act(self, action: Action) -> ActionResult:
         assert self._page is not None
+        if self._controller_released:
+            raise ControllerViolation(
+                "automation attempted to act while control of the session is "
+                "ceded to a human (docs/escalation-spec.md §1)"
+            )
         start = time.monotonic()
 
         if action.kind == "navigate":
@@ -596,13 +646,107 @@ class WebSurface:
                     marker,
                 )
 
-    # --- control transfer (escalation, step 7) ----------------------------- #
+    # --- control transfer (docs/escalation-spec.md §3-4) -------------------- #
 
     def release(self) -> SessionHandle:
-        raise NotImplementedError(
-            "release() is a step-7 (escalation) concern; the debug port is "
-            "wired up now so this doesn't require rewriting session setup"
+        """Cede control to a human. Stops issuing commands (enforced by
+        ``act()``'s controller check from here on), flushes the current
+        Playwright trace segment, and starts capturing what the human does.
+        The browser context is deliberately left open -- nothing here closes
+        anything.
+        """
+        assert self._context is not None and self._page is not None
+        assert self._run_id is not None and self._debug_port is not None
+
+        trace_dir = Path("evidence") / self._run_id
+        trace_dir.mkdir(parents=True, exist_ok=True)
+        self._trace_segment += 1
+        self._context.tracing.stop(path=str(trace_dir / f"trace_segment_{self._trace_segment}.zip"))
+
+        self._install_human_capture()
+        self._capture_active = True
+        self._controller_released = True
+
+        return SessionHandle(
+            cdp_endpoint=f"http://127.0.0.1:{self._debug_port}",
+            page_url=self._page.url,
+            run_id=self._run_id,
+            released_at=datetime.now(timezone.utc),
         )
 
     def reacquire(self, handle: SessionHandle) -> None:
-        raise NotImplementedError("reacquire() is a step-7 (escalation) concern")
+        """Resume control after a human's turn. Reconnects are made real by
+        the CDP endpoint (this is the same browser process the whole time --
+        never closed), re-observes rather than trusting stale state, resumes
+        trace recording as a new segment, and stops recording human actions.
+        """
+        assert handle.run_id == self._run_id
+        assert self._context is not None
+
+        self._capture_active = False
+        self._controller_released = False
+        self._context.tracing.start(screenshots=True, snapshots=True)
+        self.observe()
+
+    # --- human action capture (docs/escalation-spec.md §4) ------------------ #
+
+    def _install_human_capture(self) -> None:
+        assert self._context is not None and self._page is not None
+        if self._capture_installed:
+            return
+        self._context.expose_binding("__humanAction", self._on_human_action)
+        self._context.add_init_script(_HUMAN_CAPTURE_JS)
+        for frame in self._page.frames:
+            try:
+                frame.evaluate(_HUMAN_CAPTURE_JS)
+            except PlaywrightError:
+                continue
+        self._capture_installed = True
+
+    def pump_events(self) -> None:
+        """Deliberately bypasses the controller check (this is bookkeeping,
+        not an action): Playwright's sync API only invokes a registered
+        callback -- ``expose_binding``'s, here -- when the thread that owns
+        this connection makes *another* Playwright call, via the same
+        greenlet-switching machinery that call goes through. While a
+        session is released, the owning thread is off blocked in
+        ``wait_for_handoff``'s plain ``time.sleep``, which never triggers
+        that switch, so a human's captured actions would otherwise only
+        get written once the engine calls something Playwright-related
+        again (``reacquire``) -- arbitrarily late, and specifically too
+        late for the hold-timeout clock (docs/escalation-spec.md §1) to see
+        that the human is still active. Callers poll and call this once per
+        tick for exactly that reason.
+        """
+        if self._page is None:
+            return
+        try:
+            self._page.evaluate("1")
+        except PlaywrightError:
+            pass
+
+    def _on_human_action(self, source: dict[str, Any], payload_json: str) -> None:
+        # Gated on `_capture_active` rather than uninstalled on reacquire()
+        # (Playwright has no clean "remove a binding" call) -- see the
+        # comment on _HUMAN_CAPTURE_JS. Either way nothing is written to
+        # human_actions.jsonl outside a human's turn.
+        if not self._capture_active or self._run_id is None:
+            return
+        payload = json.loads(payload_json)
+        frame: Frame = source["frame"]
+        self._human_action_seq += 1
+        record = {
+            "seq": self._human_action_seq,
+            "at": datetime.now(timezone.utc).isoformat(),
+            "kind": payload["kind"],
+            "role": payload["role"],
+            "name": payload["name"],
+            "frame_path": self._frame_path_for(frame),
+            "url": frame.page.url if frame.page else "",
+            "value_redacted": payload.get("value_redacted", False),
+        }
+        path = Path("evidence") / self._run_id / "human_actions.jsonl"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(record))
+            f.write("\n")

@@ -3,6 +3,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from tests.policy.conftest import make_config
+
+from src.policy.redaction import REDACTED, Redactor
 from src.replay.evidence import EvidenceWriter
 
 
@@ -47,3 +50,66 @@ def test_second_writer_instance_for_same_run_id_still_appends_within_itself(tmp_
 
     lines = (tmp_path / "run_1" / "replay.jsonl").read_text().splitlines()
     assert len(lines) == 2
+
+
+def test_log_redacts_through_the_supplied_redactor(tmp_path):
+    redactor = Redactor(make_config().redaction)
+    redactor.mark_sensitive("10001")
+    writer = EvidenceWriter("run_1", base_dir=tmp_path, redactor=redactor)
+
+    writer.log({"event": "decision", "action": {"kind": "type", "value": "10001"}})
+
+    text = (tmp_path / "run_1" / "replay.jsonl").read_text()
+    assert "10001" not in text
+    assert REDACTED in text
+
+
+def test_write_json_redacts_key_names_and_patterns(tmp_path):
+    redactor = Redactor(make_config().redaction)
+    writer = EvidenceWriter("run_1", base_dir=tmp_path, redactor=redactor)
+
+    writer.write_json("payload.json", {"password": "hunter2", "note": "ssn 123-45-6789 on file"})
+
+    payload = json.loads((tmp_path / "run_1" / "payload.json").read_text())
+    assert payload["password"] == REDACTED
+    assert "123-45-6789" not in payload["note"]
+
+
+def test_write_result_redacts_error_fields_that_quote_a_sensitive_value(tmp_path):
+    """Regression: a checkpoint failure's error.expected/observed can quote
+    the value it compared against -- redaction must not be limited to the
+    `outputs` dict."""
+
+    class _FakeErrorResult:
+        def model_dump_json(self):
+            return json.dumps(
+                {
+                    "status": "failure",
+                    "capability_id": "cap",
+                    "capability_version": "1.0.0",
+                    "run_id": "run_1",
+                    "outputs": None,
+                    "outcome": None,
+                    "error": {
+                        "code": "CHECKPOINT_FAILED",
+                        "step_id": "step_002",
+                        "expected": "textbox Member ID == '10001'",
+                        "observed": "heading='Account summary'",
+                        "strategy_used": None,
+                        "evidence": None,
+                    },
+                    "recoveries_applied": [],
+                    "duration_ms": 10,
+                    "steps_completed": 1,
+                }
+            )
+
+    redactor = Redactor(make_config().redaction)
+    redactor.mark_sensitive("10001")
+    writer = EvidenceWriter("run_1", base_dir=tmp_path, redactor=redactor)
+
+    writer.write_result(_FakeErrorResult(), sensitive_output_names=set())
+
+    payload = json.loads((tmp_path / "run_1" / "result.json").read_text())
+    assert "10001" not in payload["error"]["expected"]
+    assert REDACTED in payload["error"]["expected"]

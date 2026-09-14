@@ -1,0 +1,9 @@
+{"seq": 1, "event": "action", "step_id": "step_001", "kind": "navigate", "duration_ms": 728}
+{"seq": 2, "event": "recovery", "code": "CONFIRMATION_INTERSTITIAL", "step_id": "step_001", "attempt": 1}
+{"seq": 3, "event": "policy_denied", "step_id": "step_001", "verdict": "deny", "rule": "test.deny_acknowledge", "reason": "test"}
+{"seq": 4, "event": "action", "step_id": "step_001", "kind": "navigate", "duration_ms": 709}
+{"seq": 5, "event": "recovery", "code": "CONFIRMATION_INTERSTITIAL", "step_id": "step_001", "attempt": 2}
+{"seq": 6, "event": "policy_denied", "step_id": "step_001", "verdict": "deny", "rule": "test.deny_acknowledge", "reason": "test"}
+{"seq": 7, "event": "action", "step_id": "step_001", "kind": "navigate", "duration_ms": 698}
+{"seq": 8, "event": "escalation", "step_id": "step_001", "reason": "EXHAUSTED_RECOVERY", "session_held": true}
+{"seq": 9, "event": "control_released", "to": "human", "step_id": "step_001", "reason": "EXHAUSTED_RECOVERY"}
