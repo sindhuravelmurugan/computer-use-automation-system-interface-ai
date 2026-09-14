@@ -2,10 +2,10 @@
   "schema_version": "1.0",
   "capability": {
     "id": "member.lookup_savings_balance",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "name": "Look up member 10001 and read their savings balance",
     "description": "Discovered from the goal: Look up member 10001 and read their savings balance",
-    "approval_state": "approved",
+    "approval_state": "draft",
     "base_capability_id": null,
     "tenant_id": null
   },
@@ -22,7 +22,7 @@
     "goal": "Look up member 10001 and read their savings balance",
     "run_id": "discover-1789313269",
     "trace_ref": "evidence/discovery/trace.jsonl",
-    "human_edited": true,
+    "human_edited": false,
     "recorded_against": "v4.2.1"
   },
   "inputs": [
@@ -33,9 +33,7 @@
       "sensitive": true,
       "description": "Discovered input (value redacted).",
       "example": null,
-      "constraints": {
-        "pattern": "^[0-9]{5}$"
-      }
+      "constraints": null
     }
   ],
   "outputs": [
@@ -236,85 +234,9 @@
       },
       "terminal": true,
       "origin": "probed"
-    },
-    {
-      "code": "PERMISSION_DENIED",
-      "kind": "business",
-      "description": "Reviewer-added: member exists but the record is restricted; the caller role cannot view it. Not discoverable by the probe pass, which only varies the declared member_id parameter, not member status.",
-      "detect": {
-        "kind": "text_matches",
-        "pattern": "This record is restricted"
-      },
-      "check_after": [
-        "step_003"
-      ],
-      "returns": {
-        "permitted": false
-      },
-      "terminal": true,
-      "origin": "reviewed"
     }
   ],
-  "recoveries": [
-    {
-      "code": "CONFIRMATION_INTERSTITIAL",
-      "kind": "recoverable",
-      "description": "Reviewer-added: known intermittent disclosure-acknowledgement modal on this app. Not discoverable from a single happy-path run that never happened to hit it.",
-      "detect": {
-        "kind": "element_present",
-        "target": {
-          "description": "Disclosure dialog",
-          "strategies": [
-            {
-              "kind": "a11y",
-              "role": "dialog",
-              "name": "Disclosure"
-            }
-          ]
-        }
-      },
-      "check_after": [
-        "any"
-      ],
-      "recovery": {
-        "action": "click",
-        "target": {
-          "description": "Acknowledge button",
-          "strategies": [
-            {
-              "kind": "a11y",
-              "role": "button",
-              "name": "Acknowledge"
-            }
-          ]
-        },
-        "value": null
-      },
-      "max_attempts": 2,
-      "then": "retry_step",
-      "restart_step_id": null
-    },
-    {
-      "code": "SESSION_EXPIRED",
-      "kind": "recoverable",
-      "description": "Reviewer-added: no session yet, or it timed out. Not discoverable from a single happy-path run (docs/discovery-spec.md section 7).",
-      "detect": {
-        "kind": "url_matches",
-        "pattern": ".*/login.*"
-      },
-      "check_after": [
-        "any"
-      ],
-      "recovery": {
-        "action": "re_authenticate",
-        "target": null,
-        "value": null
-      },
-      "max_attempts": 1,
-      "then": "restart_from",
-      "restart_step_id": "step_001"
-    }
-  ],
+  "recoveries": [],
   "success": {
     "checkpoint": {
       "kind": "element_present",

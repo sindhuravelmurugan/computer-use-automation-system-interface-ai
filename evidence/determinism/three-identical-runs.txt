@@ -1,0 +1,43 @@
+Determinism check: member.lookup_savings_balance v1.0.0, input member_id=10001,
+replayed three times back to back against a freshly reset target app
+(POST /_test/reset between runs). No LLM involved in any of these runs.
+
+Compared: event sequence (event kind + step_id, timestamps/durations excluded),
+strategy_index chosen at every resolve, checkpoint results, and final outcome.
+All three are identical.
+
+run_id           steps_completed  status   strategy_index per resolve (step_002, step_003, step_004)
+---------------  ---------------  -------  --------------------------------------------------------
+replay-determinism-0   4          success  0, 0, 0
+replay-determinism-1   4          success  0, 0, 0
+replay-determinism-2   4          success  0, 0, 0
+
+Event sequence, identical across all three runs (durations omitted -- everything
+else, including strategy_index, matches byte-for-byte):
+
+  action     step_001 navigate
+  recovery   SESSION_EXPIRED step_001 attempt=1   <- session TTL crossed between the
+                                                       bootstrap navigate and the reset
+                                                       target's login redirect; recovered
+                                                       the same way every time
+  action     step_001 navigate
+  resolve    step_002 strategy_index=0 resolved
+  action     step_002 type
+  checkpoint step_002 pass
+  resolve    step_003 strategy_index=0 resolved
+  action     step_003 click
+  checkpoint step_003 pass
+  resolve    step_004 strategy_index=0 resolved
+  action     step_004 read
+  success_checkpoint pass
+
+Each run's result.json: status=success, outputs.savings_balance=REDACTED (the
+same value on disk every time -- redaction is deterministic, not the balance
+itself, which is also identical across runs since /_test/reset reseeds member
+10001 to the same $4,832.10 each time), first-strategy resolution throughout
+(no locator fell through to a spatial or DOM fallback on any run).
+
+Full per-run artifacts: evidence/replay-success/ carries one representative
+run's replay.jsonl and result.json; the other two determinism runs are
+summarized here rather than duplicated, since the point is that they are
+indistinguishable from it.

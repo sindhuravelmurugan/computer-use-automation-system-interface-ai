@@ -218,4 +218,3 @@ __marimo__/
 .streamlit/secrets.toml
 .env
 .venv/
-evidence/**/*.png

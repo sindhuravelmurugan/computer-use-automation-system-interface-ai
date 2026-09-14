@@ -1,7 +1,0 @@
-{"seq": 1, "event": "action", "step_id": "step_001", "kind": "navigate", "duration_ms": 716}
-{"seq": 2, "event": "recovery", "code": "CONFIRMATION_INTERSTITIAL", "step_id": "step_001", "attempt": 1}
-{"seq": 3, "event": "action", "step_id": "step_001", "kind": "navigate", "duration_ms": 694}
-{"seq": 4, "event": "recovery", "code": "CONFIRMATION_INTERSTITIAL", "step_id": "step_001", "attempt": 2}
-{"seq": 5, "event": "action", "step_id": "step_001", "kind": "navigate", "duration_ms": 697}
-{"seq": 6, "event": "escalation", "step_id": "step_001", "reason": "EXHAUSTED_RECOVERY", "session_held": true}
-{"seq": 7, "event": "control_released", "to": "human", "step_id": "step_001", "reason": "EXHAUSTED_RECOVERY"}
