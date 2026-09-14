@@ -245,7 +245,7 @@ python -m scripts.escalation_acceptance   # claim/act/release over a live CDP se
 
 ## What is mocked
 
-Explicitly out of scope, by design (see `CLAUDE.md`): operator authentication
+Explicitly out of scope, by design (see `REPORT.md`): operator authentication
 (the mock operator API takes a free-text name, nothing more), agent/caller
 identity, request queueing across multiple concurrent runs, real-time
 co-browsing, and any desktop/native-app surface — only the web `Surface`
